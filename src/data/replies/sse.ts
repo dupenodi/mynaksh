@@ -1,33 +1,26 @@
 /**
- * Reads an OpenAI-style server-sent event stream and reports the text so far
- * after every token. Returns the full text once the stream ends.
+ * Reads an OpenAI-style server-sent event stream fed in as text chunks, and reports
+ * the text so far after every token.
  */
-export async function readTextStream(
-  body: ReadableStream<Uint8Array>,
-  onText: (textSoFar: string) => void,
-): Promise<string> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
+export function createSseReader(onText: (textSoFar: string) => void) {
   let buffer = '';
   let text = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      return text;
-    }
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      const token = tokenFrom(line);
-      if (token) {
-        text += token;
-        onText(text);
+  return {
+    push(chunk: string) {
+      buffer += chunk;
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const token = tokenFrom(line);
+        if (token) {
+          text += token;
+          onText(text);
+        }
       }
-    }
-  }
+    },
+    text: () => text,
+  };
 }
 
 function tokenFrom(line: string): string | undefined {

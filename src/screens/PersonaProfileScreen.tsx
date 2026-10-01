@@ -13,7 +13,6 @@ import { Section } from '../components/profile/Section';
 import { Stat } from '../components/profile/Stat';
 import { PAGE_MAX_WIDTH } from '../components/layout';
 import { getPersona } from '../domain/personas';
-import { goBackOrHome } from '../navigation/goBack';
 import type { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
 import { fonts, displayTracking } from '../theme/typography';
@@ -30,7 +29,7 @@ export function PersonaProfileScreen({ route, navigation }: Props) {
       <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
         <View style={styles.topInner}>
           <IconButton
-            onPress={() => goBackOrHome(navigation)}
+            onPress={navigation.goBack}
             accessibilityLabel="Back"
             size={32}
           >

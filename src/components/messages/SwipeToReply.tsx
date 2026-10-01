@@ -70,7 +70,8 @@ export function SwipeToReply({ onReply, enabled = true, style, contentStyle, chi
   const armedGlyphStyle = useAnimatedStyle(() => ({ opacity: offset.value >= THRESHOLD ? 1 : 0 }));
 
   return (
-    <GestureDetector gesture={pan}>
+    // touchAction is web-only: the default (none) would stop the page scrolling when a drag starts on a message.
+    <GestureDetector gesture={pan} touchAction="pan-y">
       <View style={style}>
         <Animated.View style={[styles.icon, iconStyle]}>
           <Animated.View style={[styles.glyph, glyphStyle]}>

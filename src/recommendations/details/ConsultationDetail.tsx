@@ -14,10 +14,7 @@ import type { DetailProps } from './types';
 
 const DEFAULT_MINUTES = 30;
 
-/**
- * How a consultation works, then a slot picker. Booking adds a note to the chat
- * and the human astrologer joins the conversation.
- */
+/** A slot picker. Booking adds a note to the chat and the human astrologer joins. */
 export function ConsultationDetail({ recommendation, look, actions }: DetailProps) {
   const minutes = count(recommendation.extra, 'minutes') ?? DEFAULT_MINUTES;
   const focus = text(recommendation.extra, 'focus') ?? recommendation.title;
@@ -39,18 +36,6 @@ export function ConsultationDetail({ recommendation, look, actions }: DetailProp
 
       <DetailHeading recommendation={recommendation} look={look} />
       <DetailWhy recommendation={recommendation} look={look} />
-
-      <SectionLabel>How it works</SectionLabel>
-      {[
-        `Pick a slot. A ${minutes}-minute call about “${focus}”.`,
-        `${humanAstrologer.name.split(' ')[1]} reads this chat and your chart before you talk.`,
-        'She joins this chat to say hello, then calls you at the time you chose.',
-      ].map((line, index) => (
-        <View key={line} style={styles.how}>
-          <Text style={[styles.howNumber, { color: look.tint }]}>{index + 1}</Text>
-          <Text style={styles.howText}>{line}</Text>
-        </View>
-      ))}
 
       <SectionLabel>Choose a time</SectionLabel>
       <View style={styles.slots}>
@@ -98,24 +83,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.human,
-  },
-  how: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 5,
-  },
-  howNumber: {
-    width: 14,
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  howText: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.text,
   },
   slots: {
     flexDirection: 'row',

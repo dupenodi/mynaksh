@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, StyleSheet } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,10 +18,8 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      {/* Padding on Android too: under edge-to-edge the window no longer resizes for the keyboard. */}
+      <KeyboardAvoidingView style={styles.root} behavior="padding">
         <Pressable
           style={styles.backdrop}
           onPress={onClose}

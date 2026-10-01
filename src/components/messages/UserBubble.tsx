@@ -11,9 +11,9 @@ import type { MessageRowProps } from './MessageRow';
 import { SwipeToReply } from './SwipeToReply';
 
 const statusText: Record<UserMessage['status'], string> = {
-  sending: 'Sending',
+  sending: 'Sending…',
   sent: 'Sent',
-  failed: 'Not sent',
+  failed: 'Failed',
 };
 
 export function UserBubble({

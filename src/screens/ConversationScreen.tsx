@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as Clipboard from 'expo-clipboard';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -34,7 +34,6 @@ import { firstName, type Kundli } from '../domain/kundli';
 import type { Message, ReplyRef } from '../domain/message';
 import { getPersona, type Persona } from '../domain/personas';
 import type { Recommendation } from '../domain/recommendation';
-import { goBackOrHome } from '../navigation/goBack';
 import type { RootStackParamList } from '../navigation/types';
 import type { DetailActions } from '../recommendations/details';
 import { useConversationStore, type Mode } from '../state/conversationStore';
@@ -101,14 +100,14 @@ export function ConversationScreen({ route, navigation }: Props) {
   const hideToast = useCallback(() => setToast(null), []);
 
   const onMessageAction = useCallback(
-    async (action: MessageAction, message: Message) => {
+    (action: MessageAction, message: Message) => {
       setMenu(null);
       switch (action) {
         case 'reply':
           actions.setReplyingTo(toReplyRef(message, persona));
           break;
         case 'copy':
-          await Clipboard.setStringAsync(message.text);
+          Clipboard.setString(message.text);
           setToast('Copied to clipboard');
           break;
         case 'retry':
@@ -196,14 +195,15 @@ export function ConversationScreen({ route, navigation }: Props) {
   ) : null;
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    // Padding on Android too: edge-to-edge (forced from Android 15) means the window no longer resizes for the keyboard.
+    <KeyboardAvoidingView style={styles.screen} behavior="padding">
       <ConversationHeader
         persona={persona}
         mode={mode}
         isOnline={isOnline}
         isTyping={isTyping}
         chartOwner={kundli ? firstName(kundli) : null}
-        onBack={() => goBackOrHome(navigation)}
+        onBack={navigation.goBack}
         onProfilePress={() => navigation.navigate('Profile', { personaId: persona.id })}
         onMenuPress={() => setSettingsOpen(true)}
       />
@@ -302,7 +302,8 @@ const styles = StyleSheet.create({
     maxWidth: CONTENT_MAX_WIDTH + SCREEN_GUTTER * 2,
     alignSelf: 'center',
     paddingHorizontal: SCREEN_GUTTER,
-    paddingTop: 12,
+    // Inverted: paddingTop sits under the newest message. Its own bottom margin is gap enough.
+    paddingTop: 0,
     paddingBottom: 8,
   },
   olderSpinner: {

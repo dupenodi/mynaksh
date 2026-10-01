@@ -18,7 +18,7 @@ export function NewChatRow({ onPress }: { onPress: () => void }) {
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>Start a new live chat</Text>
-        <Text style={styles.caption}>Pick an astrologer. Starts empty, powered by a real model.</Text>
+        <Text style={styles.caption}>A fresh chat with a real model.</Text>
       </View>
     </Pressable>
   );

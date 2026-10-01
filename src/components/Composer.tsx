@@ -1,6 +1,7 @@
 import { ArrowUp, Plus, X } from 'lucide-react-native';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   Platform,
   StyleSheet,
   Text,
@@ -13,7 +14,7 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ReplyRef } from '../domain/message';
-import { cardShadow, colors } from '../theme/colors';
+import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { IconButton } from './Button';
 import { CONTENT_MAX_WIDTH } from './layout';
@@ -28,22 +29,14 @@ type ComposerProps = {
   placeholder: string;
 };
 
-const LINE_HEIGHT = 24;
+const LINE_HEIGHT = 22;
+const BUTTON = 40;
 const MIN_INPUT = LINE_HEIGHT;
 const MAX_INPUT = LINE_HEIGHT * 6;
 
 const clampHeight = (height: number) => Math.min(MAX_INPUT, Math.max(MIN_INPUT, height));
 
-type KeyEvent = NativeSyntheticEvent<TextInputKeyPressEventData> & {
-  shiftKey?: boolean;
-  preventDefault?: () => void;
-  nativeEvent: TextInputKeyPressEventData & { isComposing?: boolean };
-};
-
-/**
- * A card rather than a pill: the text gets its own line and grows up to six lines,
- * with the actions in a row underneath.
- */
+/** One row: attach, a text field that grows up to six lines, send. */
 export function Composer({
   onSend,
   disabled = false,
@@ -58,6 +51,7 @@ export function Composer({
   const [draft, setDraft] = useState('');
   const [inputHeight, setInputHeight] = useState(MIN_INPUT);
   const canSend = !disabled && draft.trim().length > 0;
+  const keyboardOpen = useKeyboardOpen();
 
   // Choosing "Reply" focuses the input so the user can type straight away.
   useEffect(() => {
@@ -65,6 +59,14 @@ export function Composer({
       inputRef.current?.focus();
     }
   }, [replyingTo]);
+
+  // In a browser, Enter sends and Shift+Enter adds a line. On phones, Return adds a line.
+  const onKeyPress = (event: NativeSyntheticEvent<TextInputKeyPressEventData> & { shiftKey?: boolean }) => {
+    if (Platform.OS === 'web' && event.nativeEvent.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      send();
+    }
+  };
 
   const send = () => {
     if (!canSend) {
@@ -75,32 +77,8 @@ export function Composer({
     setInputHeight(MIN_INPUT);
   };
 
-  // A web textarea never reports shrinking, so measure it directly: collapse, read scrollHeight, set.
-  useLayoutEffect(() => {
-    if (Platform.OS !== 'web') {
-      return;
-    }
-    const node = inputRef.current as unknown as HTMLTextAreaElement | null;
-    if (!node) {
-      return;
-    }
-    node.style.height = '0px';
-    const next = clampHeight(node.scrollHeight);
-    node.style.height = `${next}px`;
-    setInputHeight(next);
-  }, [draft]);
-
-  // On the web, Enter sends and Shift+Enter starts a new line. On phones, Return adds a line and the button sends.
-  const onKeyPress = (event: KeyEvent) => {
-    if (Platform.OS !== 'web' || event.nativeEvent.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) {
-      return;
-    }
-    event.preventDefault?.();
-    send();
-  };
-
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.bar, { paddingBottom: keyboardOpen ? 8 : Math.max(insets.bottom, 8) }]}>
       <View style={styles.column}>
         {replyingTo ? (
           <Animated.View entering={FadeInDown.duration(200)} exiting={FadeOutDown.duration(150)} style={styles.reply}>
@@ -116,49 +94,44 @@ export function Composer({
           </Animated.View>
         ) : null}
 
-        <View style={styles.card}>
-          <TextInput
-            ref={inputRef}
-            value={draft}
-            onChangeText={setDraft}
-            onKeyPress={onKeyPress}
-            onContentSizeChange={
-              Platform.OS === 'web'
-                ? undefined
-                : (event) => setInputHeight(clampHeight(event.nativeEvent.contentSize.height))
-            }
-            multiline
-            placeholder={placeholder}
-            placeholderTextColor={colors.faint}
-            style={[styles.input, { height: inputHeight }]}
-            scrollEnabled={inputHeight >= MAX_INPUT}
-            accessibilityLabel="Message"
-          />
-
-          <View style={styles.tools}>
-            <View>
-              <IconButton
-                onPress={onAttachPress}
-                accessibilityLabel={hasKundli ? 'Edit your birth details' : 'Share your birth details'}
-                size={34}
-              >
-                <Plus size={17} color={colors.text} strokeWidth={1.75} />
-              </IconButton>
-              {hasKundli ? <View style={styles.attachDot} /> : null}
-            </View>
+        <View style={styles.row}>
+          <View>
             <IconButton
-              onPress={send}
-              disabled={!canSend}
-              accessibilityLabel="Send message"
-              tone={canSend ? 'accent' : 'surface'}
-              size={34}
+              onPress={onAttachPress}
+              accessibilityLabel={hasKundli ? 'Edit your birth details' : 'Share your birth details'}
+              size={BUTTON}
             >
-              <ArrowUp size={18} color={canSend ? colors.onAccent : colors.faint} strokeWidth={2.25} />
+              <Plus size={18} color={colors.text} strokeWidth={1.75} />
             </IconButton>
+            {hasKundli ? <View style={styles.attachDot} /> : null}
           </View>
-        </View>
 
-        <Text style={styles.disclaimer}>AI readings are for reflection, not for big decisions.</Text>
+          <View style={styles.field}>
+            <TextInput
+              ref={inputRef}
+              value={draft}
+              onChangeText={setDraft}
+              onKeyPress={onKeyPress}
+              onContentSizeChange={(event) => setInputHeight(clampHeight(event.nativeEvent.contentSize.height))}
+              multiline
+              placeholder={placeholder}
+              placeholderTextColor={colors.faint}
+              style={[styles.input, { height: inputHeight }]}
+              scrollEnabled={inputHeight >= MAX_INPUT}
+              accessibilityLabel="Message"
+            />
+          </View>
+
+          <IconButton
+            onPress={send}
+            disabled={!canSend}
+            accessibilityLabel="Send message"
+            tone={canSend ? 'accent' : 'surface'}
+            size={BUTTON}
+          >
+            <ArrowUp size={18} color={canSend ? colors.onAccent : colors.faint} strokeWidth={2.25} />
+          </IconButton>
+        </View>
       </View>
     </View>
   );
@@ -166,8 +139,8 @@ export function Composer({
 
 const styles = StyleSheet.create({
   bar: {
-    paddingTop: 8,
-    paddingHorizontal: 14,
+    paddingTop: 6,
+    paddingHorizontal: 12,
     backgroundColor: colors.background,
   },
   column: {
@@ -202,38 +175,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  card: {
-    paddingTop: 14,
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-    borderRadius: 22,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  field: {
+    flex: 1,
+    minHeight: BUTTON,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.lineStrong,
     backgroundColor: colors.background,
-    boxShadow: cardShadow,
   },
   input: {
-    paddingHorizontal: 10,
-    paddingTop: 0,
-    paddingBottom: 0,
+    padding: 0,
     fontFamily: fonts.body,
     fontSize: 16,
     lineHeight: LINE_HEIGHT,
     color: colors.text,
     textAlignVertical: 'top',
-    // The page's dark color-scheme gives a bare textarea its own fill and border; clear both.
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    // Chrome draws its own focus ring for outline-style auto, whatever the width.
-    outlineStyle: 'solid',
-    outlineWidth: 0,
-    outlineColor: 'transparent',
-  },
-  tools: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
   },
   attachDot: {
     position: 'absolute',
@@ -246,11 +210,24 @@ const styles = StyleSheet.create({
     borderColor: colors.background,
     backgroundColor: colors.brand,
   },
-  disclaimer: {
-    marginTop: 8,
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.faint,
-    textAlign: 'center',
-  },
 });
+
+/**
+ * A docked keyboard covers the home-indicator / gesture-bar inset, so the bar drops it while
+ * typing. Floating keyboards also fire these events but cover nothing, hence the height check.
+ */
+function useKeyboardOpen() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const ios = Platform.OS === 'ios';
+    const show = Keyboard.addListener(ios ? 'keyboardWillShow' : 'keyboardDidShow', (event) =>
+      setOpen(event.endCoordinates.height > 150),
+    );
+    const hide = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', () => setOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return open;
+}

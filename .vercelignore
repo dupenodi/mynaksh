@@ -1,8 +1,0 @@
-node_modules
-.expo
-dist
-.env
-.env*.local
-ASSIGNMENT_CONTEXT.md
-EXACT_ASSIGNMENT.md
-.playwright-mcp

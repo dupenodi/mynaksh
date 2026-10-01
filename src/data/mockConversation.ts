@@ -7,8 +7,11 @@ const ago = (ms: number) => now - ms;
 // The brief's session happened earlier today, before the simulated chat.
 const EARLIER = 5 * 60 * MINUTE;
 
-/** The conversation from the brief. Text is unchanged; ids are prefixed and timestamps added. */
-const briefConversation: Message[] = [
+/**
+ * The brief's mock payload: the initial state every simulated chat opens with.
+ * Text is unchanged; ids are prefixed and timestamps added.
+ */
+export const briefConversation: Message[] = [
   {
     id: 'brief-1',
     type: 'system',
@@ -64,7 +67,6 @@ const briefConversation: Message[] = [
  * user scrolls to the top, which is how pagination would work against an API.
  */
 export const olderPages: Message[][] = [
-  briefConversation,
   [
     {
       id: 'h2-1',

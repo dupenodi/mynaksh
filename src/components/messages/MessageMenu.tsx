@@ -21,11 +21,7 @@ const ITEM_HEIGHT = 44;
 const GAP = 8;
 const EDGE = 12;
 
-/**
- * Only what a chat app's context menu needs. Reply is also a swipe; Retry appears only for a
- * message that failed to send. Delete is offered only on your own messages: removing an
- * astrologer's words would rewrite their side of the conversation.
- */
+/** Reply (also a swipe), Copy and Delete; Retry only for a message that failed to send. */
 export function menuItems(message: Message): Item[] {
   const items: Item[] = [
     { action: 'reply', label: 'Reply', Icon: Reply },
@@ -34,9 +30,7 @@ export function menuItems(message: Message): Item[] {
   if (message.type === 'user' && message.status === 'failed') {
     items.push({ action: 'retry', label: 'Retry', Icon: RotateCw });
   }
-  if (message.type === 'user') {
-    items.push({ action: 'delete', label: 'Delete', Icon: Trash2, danger: true });
-  }
+  items.push({ action: 'delete', label: 'Delete', Icon: Trash2, danger: true });
   return items;
 }
 

@@ -1,4 +1,4 @@
-// Local stand-in for api/chat.mjs. Keeps the OpenRouter key on the server and has no dependencies.
+// Keeps the OpenRouter key off the phone: the app posts here and the reply streams straight back.
 import { createServer } from 'node:http';
 
 import { hasApiKey, MODEL, streamChat } from './openrouter.mjs';
@@ -10,12 +10,6 @@ if (!hasApiKey()) {
   process.exit(1);
 }
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
 async function readJson(req) {
   let body = '';
   for await (const chunk of req) body += chunk;
@@ -23,24 +17,19 @@ async function readJson(req) {
 }
 
 createServer(async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, cors).end();
-    return;
-  }
   if (req.method !== 'POST' || req.url !== '/api/chat') {
-    res.writeHead(404, cors).end();
+    res.writeHead(404).end();
     return;
   }
 
   try {
     const { messages } = await readJson(req);
     const upstream = await streamChat(messages);
-    // Pipe the server-sent events straight through, so tokens reach the app as they arrive.
-    res.writeHead(upstream.status, { ...cors, 'Content-Type': 'text/event-stream' });
+    res.writeHead(upstream.status, { 'Content-Type': 'text/event-stream' });
     for await (const chunk of upstream.body) res.write(chunk);
     res.end();
   } catch (error) {
     console.error(error);
-    res.writeHead(502, cors).end(JSON.stringify({ error: 'Upstream request failed' }));
+    res.writeHead(502).end(JSON.stringify({ error: 'Upstream request failed' }));
   }
 }).listen(PORT, () => console.log(`Chat proxy on http://localhost:${PORT} using ${MODEL}`));

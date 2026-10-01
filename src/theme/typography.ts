@@ -1,23 +1,13 @@
-import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond';
-import { Geist_400Regular, Geist_500Medium, Geist_600SemiBold } from '@expo-google-fonts/geist';
-
-/** Loaded once in App.tsx. Each weight is its own family, so styles never set fontWeight. */
-export const fontAssets = {
-  CormorantGaramond_600SemiBold,
-  Geist_400Regular,
-  Geist_500Medium,
-  Geist_600SemiBold,
-};
-
 /**
  * Cormorant Garamond for headings, names and figures; Geist for everything functional,
- * including chat text. Cormorant has a small x-height, so keep it at 20px and up.
+ * including chat text. Bundled from assets/fonts; each name is the file's PostScript name, which
+ * both iOS and Android resolve, so styles never set fontWeight. Cormorant has a small x-height, so keep it at 20px and up.
  */
 export const fonts = {
-  display: 'CormorantGaramond_600SemiBold',
-  body: 'Geist_400Regular',
-  medium: 'Geist_500Medium',
-  semibold: 'Geist_600SemiBold',
+  display: 'CormorantGaramond-SemiBold',
+  body: 'Geist-Regular',
+  medium: 'Geist-Medium',
+  semibold: 'Geist-SemiBold',
 } as const;
 
 /** Large Geist text needs negative tracking to look set rather than typed. */

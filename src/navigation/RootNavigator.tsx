@@ -18,9 +18,9 @@ export function RootNavigator() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Stack.Screen name="Astrologers" component={AstrologersScreen} options={{ title: 'MyNaksh | Astrologers' }} />
-      <Stack.Screen name="Profile" component={PersonaProfileScreen} options={{ title: 'MyNaksh | Profile' }} />
-      <Stack.Screen name="Chat" component={ConversationScreen} options={{ title: 'MyNaksh | Chat' }} />
+      <Stack.Screen name="Astrologers" component={AstrologersScreen} />
+      <Stack.Screen name="Profile" component={PersonaProfileScreen} />
+      <Stack.Screen name="Chat" component={ConversationScreen} />
     </Stack.Navigator>
   );
 }

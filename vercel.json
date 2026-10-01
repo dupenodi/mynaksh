@@ -2,10 +2,17 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm ci",
-  "buildCommand": "npx expo export --platform web",
+  "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
   "functions": {
-    "api/chat.mjs": { "maxDuration": 60 }
+    "api/chat.mjs": {
+      "maxDuration": 60
+    }
   },
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

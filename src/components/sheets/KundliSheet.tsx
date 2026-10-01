@@ -26,7 +26,7 @@ export function KundliSheet({ visible, initial, onClose, onAttach }: Props) {
           header={
             <>
               <Text style={styles.title}>Your birth details</Text>
-              <Text style={styles.caption}>With these, your astrologer reads your chart instead of guessing.</Text>
+              <Text style={styles.caption}>So your astrologer can read your chart.</Text>
             </>
           }
         />

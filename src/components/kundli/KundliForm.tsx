@@ -202,8 +202,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.text,
-    outlineStyle: 'solid',
-    outlineWidth: 0,
   },
   toggle: {
     flexDirection: 'row',

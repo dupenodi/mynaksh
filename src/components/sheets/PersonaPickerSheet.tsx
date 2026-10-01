@@ -18,7 +18,7 @@ export function PersonaPickerSheet({ visible, onClose, onPick }: Props) {
   return (
     <Sheet visible={visible} onClose={onClose}>
       <Text style={styles.title}>Start a live chat</Text>
-      <Text style={styles.subtitle}>A fresh conversation with a real model. Share your birth details and see where it goes.</Text>
+      <Text style={styles.subtitle}>A fresh chat with a real model.</Text>
 
       {personaList.map((persona) => (
         <Pressable

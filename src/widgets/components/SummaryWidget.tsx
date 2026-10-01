@@ -1,7 +1,4 @@
-import { Text, StyleSheet } from 'react-native';
-
 import { colors } from '../../theme/colors';
-import { fonts } from '../../theme/typography';
 import type { WidgetProps } from '../types';
 import { MarkedList, WidgetCard, WidgetSection } from './WidgetCard';
 
@@ -19,7 +16,6 @@ export function SummaryWidget({ widget, context }: WidgetProps<'summary'>) {
       {sections.map((section) => (
         <SummarySection key={section.title} {...section} />
       ))}
-      <Text style={styles.footer}>How did this session feel? Tap 👍 or 👎 below.</Text>
     </WidgetCard>
   );
 }
@@ -32,15 +28,3 @@ function SummarySection({ title, items, color }: { title: string; items: string[
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  footer: {
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.faint,
-  },
-});

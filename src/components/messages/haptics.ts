@@ -1,16 +1,13 @@
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+import { trigger } from 'react-native-haptic-feedback';
 
-/** A light tick for gestures crossing a threshold. Silent on web, where there is no motor. */
+const options = { enableVibrateFallback: false, ignoreAndroidSystemSettings: false };
+
+/** A light tick for gestures crossing a threshold. */
 export function tapHaptic() {
-  if (Platform.OS !== 'web') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-  }
+  trigger('impactLight', options);
 }
 
 /** The firmer bump that confirms a long press opened something. */
 export function pressHaptic() {
-  if (Platform.OS !== 'web') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-  }
+  trigger('impactMedium', options);
 }

@@ -32,7 +32,7 @@ export function SettingsSheet({ visible, mode, isOnline, onClose, onToggleOnline
         <View style={styles.row}>
           <View style={styles.rowText}>
             <Text style={styles.label}>Simulate offline</Text>
-            <Text style={styles.hint}>Messages fail to send and can be retried.</Text>
+            <Text style={styles.hint}>Sends fail, so you can retry.</Text>
           </View>
           <Toggle
             value={!isOnline}

@@ -27,7 +27,8 @@ export function LoadingSkeleton() {
   const style = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
   return (
-    <Animated.View style={[styles.skeleton, style]} accessibilityLabel="Loading conversation" accessibilityRole="progressbar">
+    <Animated.View style={[styles.skeleton, style]} accessibilityRole="progressbar">
+      <Text style={styles.loadingText}>Loading conversation…</Text>
       <View style={[styles.bone, styles.pill]} />
       <View style={[styles.bone, styles.right, { width: '62%' }]} />
       <View style={styles.advisor}>
@@ -51,9 +52,8 @@ export function LoadError({ onRetry }: { onRetry: () => void }) {
       <View style={styles.errorIcon}>
         <CloudOff size={22} color={colors.text} strokeWidth={1.5} />
       </View>
-      <Text style={styles.title}>Couldn’t load this conversation</Text>
-      <Text style={styles.body}>Check your connection, then try again. Your messages are safe.</Text>
-      <Button label="Try again" onPress={onRetry} style={styles.button} />
+      <Text style={styles.title}>Unable to load conversation</Text>
+      <Button label="Retry" onPress={onRetry} style={styles.button} />
     </View>
   );
 }
@@ -71,9 +71,7 @@ export function EmptyState({ persona, onPick, onShareKundli }: EmptyStateProps) 
         <Avatar source={persona.avatar} size={64} />
         <Text style={styles.title}>{persona.name}</Text>
         <Text style={styles.quote}>“{persona.quote}”</Text>
-        <Text style={styles.body}>
-          Share your birth details so {persona.name} can read your chart, or start with a question.
-        </Text>
+        <Text style={styles.body}>Start your conversation.</Text>
         <Button label="Share birth details" onPress={onShareKundli} style={styles.button} />
         <View style={styles.suggestions}>
           {persona.suggestions.map((text) => (
@@ -152,6 +150,12 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     letterSpacing: displayTracking(26),
     color: colors.text,
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.muted,
     textAlign: 'center',
   },
   body: {

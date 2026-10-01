@@ -329,7 +329,6 @@ const styles = StyleSheet.create({
     height: ROW,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' ? ({ scrollSnapAlign: 'start' } as ViewStyle) : null),
   },
   figure: {
     fontFamily: fonts.display,
