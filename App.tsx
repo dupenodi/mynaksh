@@ -1,7 +1,8 @@
-import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer, type Theme } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { linking } from './src/navigation/linking';
@@ -13,24 +14,26 @@ import { fontAssets } from './src/theme/typography';
 registerDefaultRecommendations();
 
 const navTheme: Theme = {
-  ...DarkTheme,
-  colors: { ...DarkTheme.colors, background: colors.background, card: colors.background, text: colors.text },
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: colors.background, card: colors.background, text: colors.text },
 };
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
 
-  // Hold on the night background until the fonts arrive, so text never reflows.
+  // Hold on the blank page until the fonts arrive, so text never reflows.
   if (!fontsLoaded && !fontError) {
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   }
 
   return (
-    <SafeAreaProvider style={{ backgroundColor: colors.background }}>
-      <NavigationContainer linking={linking} theme={navTheme}>
-        <RootNavigator />
-      </NavigationContainer>
-      <StatusBar style="light" />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider style={{ backgroundColor: colors.background }}>
+        <NavigationContainer linking={linking} theme={navTheme}>
+          <RootNavigator />
+        </NavigationContainer>
+        <StatusBar style="dark" />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

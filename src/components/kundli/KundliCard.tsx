@@ -15,7 +15,7 @@ export function KundliCard({ kundli }: { kundli: Kundli }) {
   return (
     <View style={styles.card} accessibilityLabel={`Kundli for ${kundli.name}`}>
       <View style={styles.chart}>
-        <KundliChart size={84} firstSign={sign?.number ?? null} firstHousePlanets={['Su']} tone="dark" />
+        <KundliChart size={84} firstSign={sign?.number ?? null} firstHousePlanets={['Su']} tone="light" />
       </View>
       <View style={styles.details}>
         <Text style={styles.kicker}>Birth chart</Text>
@@ -45,37 +45,40 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 10,
     padding: 10,
-    borderRadius: 16,
-    backgroundColor: colors.ink,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   chart: {
-    padding: 4,
+    padding: 2,
   },
   details: {
     flexShrink: 1,
   },
   kicker: {
     fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.accent,
+    fontSize: 11,
+    color: colors.muted,
   },
   name: {
     marginTop: 2,
-    fontFamily: fonts.display,
-    fontSize: 20,
-    lineHeight: 23,
-    color: colors.paper,
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    lineHeight: 20,
+    letterSpacing: -0.1,
+    color: colors.text,
   },
   sign: {
-    marginTop: 2,
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.accent,
+    marginTop: 1,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.text,
   },
   meta: {
-    marginTop: 2,
+    marginTop: 1,
     fontFamily: fonts.body,
     fontSize: 12,
-    color: 'rgba(238, 228, 206, 0.66)',
+    color: colors.muted,
   },
 });

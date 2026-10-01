@@ -1,0 +1,48 @@
+import { defineGroup } from './defineGroup';
+
+export const rituals = defineGroup('rituals', {
+  remedy: {
+    label: 'Remedy',
+    glyph: '❂',
+    tint: '#3E4C7A',
+    wash: '#E6E9F3',
+    cta: 'Start ritual',
+    image: require('../../../assets/images/remedy.jpg'),
+    blurb: 'A simple ritual chosen for the planet that needs support.',
+    hint: 'a simple ritual for a troubled planet',
+    fields: '"extra": {"steps": 2 to 4 short steps}; facts like Day, For how long',
+  },
+  mantra: {
+    label: 'Mantra',
+    glyph: 'ॐ',
+    tint: '#8A4B1E',
+    wash: '#F5E8DC',
+    cta: 'Start chanting',
+    image: require('../../../assets/images/mantra.jpg'),
+    blurb: 'Chant at your own pace. Tap the bead to count.',
+    hint: 'a chant for a planet',
+    fields: '"extra": {"mantra": the real chant in Roman script, "meaning": one line, "count": usually 108}; facts like Best time, Day',
+  },
+  meditation: {
+    label: 'Meditation',
+    glyph: '◯',
+    tint: '#4A6B8A',
+    wash: '#E5ECF2',
+    cta: 'Begin',
+    image: require('../../../assets/images/meditation.jpg'),
+    blurb: 'A short guided practice to settle a restless mind.',
+    hint: 'a short guided practice for stress, sleep or focus',
+    fields: '"extra": {"steps": 3 or 4 short steps}; facts like Duration, Best time',
+  },
+  puja: {
+    label: 'Puja',
+    glyph: '🪔',
+    tint: '#A2481C',
+    wash: '#F8E7DB',
+    cta: 'Book puja',
+    image: require('../../../assets/images/puja.jpg'),
+    blurb: 'Performed in your name by temple priests, with a video of the ritual.',
+    hint: 'a temple puja performed in their name for a bigger dosha',
+    fields: 'facts like Deity, Temple, Best day',
+  },
+});

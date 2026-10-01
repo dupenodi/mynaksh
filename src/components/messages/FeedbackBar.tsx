@@ -1,6 +1,6 @@
-import { ThumbsDown, ThumbsUp } from 'lucide-react-native';
+import { Copy, ThumbsDown, ThumbsUp } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type PressableStateCallbackType } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { DISLIKE_REASONS, type DislikeReason, type Feedback } from '../../domain/message';
@@ -10,24 +10,43 @@ import { Chip } from '../Chip';
 
 type Props = {
   feedback: Feedback | undefined;
+  /** Only AI replies can be rated; the human astrologer's messages get the other actions. */
+  rateable: boolean;
+  time: string;
+  onCopy: () => void;
   onRate: (rating: Feedback['rating']) => void;
   onToggleReason: (reason: DislikeReason) => void;
 };
 
-export function FeedbackBar({ feedback, onRate, onToggleReason }: Props) {
+const ICON = { size: 16, strokeWidth: 1.75 };
+
+/** The row under a reply: copy and rating. Reply is a swipe, the rest is in the long-press menu. */
+export function FeedbackBar({ feedback, rateable, time, onCopy, onRate, onToggleReason }: Props) {
   const reasons = feedback?.rating === 'dislike' ? feedback.reasons : null;
   const liked = feedback?.rating === 'like';
   const disliked = feedback?.rating === 'dislike';
 
   return (
     <View style={styles.bar}>
-      <View style={styles.rates}>
-        <RateButton label="Helpful" selected={liked} onPress={() => onRate('like')}>
-          <ThumbsUp size={15} color={liked ? colors.accent : colors.muted} strokeWidth={1.75} />
-        </RateButton>
-        <RateButton label="Not helpful" selected={disliked} onPress={() => onRate('dislike')}>
-          <ThumbsDown size={15} color={disliked ? colors.accent : colors.muted} strokeWidth={1.75} />
-        </RateButton>
+      <View style={styles.actions}>
+        <ActionButton label="Copy" onPress={onCopy}>
+          <Copy {...ICON} color={colors.muted} />
+        </ActionButton>
+        {rateable ? (
+          <>
+            <ActionButton label="Helpful" selected={liked} tone="positive" onPress={() => onRate('like')}>
+              <ThumbsUp {...ICON} color={liked ? colors.positive : colors.muted} fill={liked ? colors.positiveSoft : 'none'} />
+            </ActionButton>
+            <ActionButton label="Not helpful" selected={disliked} onPress={() => onRate('dislike')}>
+              <ThumbsDown
+                {...ICON}
+                color={disliked ? colors.accent : colors.muted}
+                fill={disliked ? colors.accentSoft : 'none'}
+              />
+            </ActionButton>
+          </>
+        ) : null}
+        <Text style={styles.time}>{time}</Text>
       </View>
 
       {reasons ? (
@@ -49,17 +68,28 @@ export function FeedbackBar({ feedback, onRate, onToggleReason }: Props) {
   );
 }
 
-type RateButtonProps = { label: string; selected: boolean; onPress: () => void; children: ReactNode };
+type ActionButtonProps = {
+  label: string;
+  selected?: boolean;
+  tone?: 'accent' | 'positive';
+  onPress: () => void;
+  children: ReactNode;
+};
 
-function RateButton({ label, selected, onPress, children }: RateButtonProps) {
+function ActionButton({ label, selected = false, tone = 'accent', onPress, children }: ActionButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={6}
+      hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}
-      style={({ pressed }) => [styles.rate, selected && styles.rateSelected, pressed && styles.pressed]}
+      // react-native-web also reports hover, which the native types leave out.
+      style={({ pressed, hovered }: PressableStateCallbackType & { hovered?: boolean }) => [
+        styles.action,
+        (hovered || pressed) && styles.actionActive,
+        selected && (tone === 'positive' ? styles.actionPositive : styles.actionSelected),
+      ]}
     >
       {children}
     </Pressable>
@@ -68,27 +98,39 @@ function RateButton({ label, selected, onPress, children }: RateButtonProps) {
 
 const styles = StyleSheet.create({
   bar: {
-    flex: 1,
+    marginTop: 8,
+    marginLeft: -7,
   },
-  rates: {
+  actions: {
     flexDirection: 'row',
-    gap: 4,
+    alignItems: 'center',
+    gap: 2,
   },
-  rate: {
+  action: {
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rateSelected: {
+  actionActive: {
+    backgroundColor: colors.surface,
+  },
+  actionSelected: {
     backgroundColor: colors.accentSoft,
   },
-  pressed: {
-    opacity: 0.7,
+  actionPositive: {
+    backgroundColor: colors.positiveSoft,
+  },
+  time: {
+    marginLeft: 8,
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.faint,
   },
   reasons: {
-    marginTop: 6,
+    marginTop: 8,
+    marginLeft: 7,
   },
   why: {
     fontFamily: fonts.medium,

@@ -13,7 +13,7 @@ export function streamChat(messages) {
       'Content-Type': 'application/json',
       'X-Title': 'MyNaksh Conversation',
     },
-    body: JSON.stringify({ model: MODEL, messages, stream: true, max_tokens: 600 }),
+    body: JSON.stringify({ model: MODEL, messages, stream: true, max_tokens: 1800 }),
   });
 }
 

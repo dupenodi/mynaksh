@@ -1,8 +1,9 @@
 import type { Message } from '../domain/message';
-import { mockConversation, olderPages } from './mockConversation';
+import type { PersonaId } from '../domain/personas';
+import { olderPages } from './mockConversation';
 import { isOnline, OfflineError } from './network';
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { simulatedChat, type SimulatedChat } from './simulated';
+import { wait } from './wait';
 
 async function request<T>(ms: number, run: () => T): Promise<T> {
   await wait(ms);
@@ -12,8 +13,9 @@ async function request<T>(ms: number, run: () => T): Promise<T> {
   return run();
 }
 
-export function fetchConversation(): Promise<Message[]> {
-  return request(900, () => mockConversation);
+/** The persona's simulated session, as if fetched from a server. */
+export function fetchConversation(personaId: PersonaId): Promise<SimulatedChat> {
+  return request(700, () => simulatedChat(personaId));
 }
 
 export function fetchOlder(page: number): Promise<{ messages: Message[]; hasMore: boolean }> {

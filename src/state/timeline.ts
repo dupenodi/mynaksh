@@ -48,6 +48,13 @@ export function timeLabel(time: number): string {
   return new Date(time).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
+/** The time for today, otherwise the weekday. For compact lists. */
+export function shortTimeLabel(time: number, now = Date.now()): string {
+  return isSameDay(time, now)
+    ? timeLabel(time)
+    : new Date(time).toLocaleDateString(undefined, { weekday: 'short' });
+}
+
 /**
  * Turns the flat message list into what the list renders: a day separator
  * before each new day, and group flags on every message. Pure, so it is

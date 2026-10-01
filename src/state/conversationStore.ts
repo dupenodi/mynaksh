@@ -2,8 +2,12 @@ import { create } from 'zustand';
 
 import { fetchConversation, fetchOlder } from '../data/mockApi';
 import { setSimulatedOnline } from '../data/network';
-import { parseReply, replySources, visibleText, type Mode } from '../data/replies';
+import { parseReply, replySources, visibleText, type Mode, type Speaker } from '../data/replies';
+import { wait } from '../data/wait';
+import { humanAstrologer } from '../domain/advisors';
+import { slotLabel, type ConsultationBooking } from '../domain/consultation';
 import type { Kundli } from '../domain/kundli';
+import { applyRating, toggleReason } from '../domain/feedback';
 import type {
   AiMessage,
   DeliveryStatus,
@@ -14,21 +18,9 @@ import type {
   UserMessage,
 } from '../domain/message';
 import { personas, type PersonaId } from '../domain/personas';
+import { freshSession, sessionKey, settle, type Session, type SessionKey } from './session';
 
 export type { Mode } from '../data/replies';
-
-type LoadStatus = 'loading' | 'ready' | 'error';
-
-// Everything that belongs to one conversation. Every persona has one per mode.
-type Session = {
-  messages: Message[];
-  status: LoadStatus;
-  kundli: Kundli | null;
-  hasOlder: boolean;
-  olderPage: number;
-};
-
-type SessionKey = `${PersonaId}:${Mode}`;
 
 type ConversationState = Session & {
   personaId: PersonaId;
@@ -41,8 +33,10 @@ type ConversationState = Session & {
   isLoadingOlder: boolean;
   replyingTo: ReplyRef | null;
 
-  openChat: (personaId: PersonaId) => void;
-  setMode: (mode: Mode) => void;
+  openChat: (personaId: PersonaId, mode: Mode) => void;
+  /** A brand new live conversation with this persona, replacing any earlier one. */
+  startFreshChat: (personaId: PersonaId) => void;
+  bookConsultation: (booking: ConsultationBooking) => Promise<void>;
   load: () => Promise<void>;
   loadOlder: () => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
@@ -55,14 +49,6 @@ type ConversationState = Session & {
   clearConversation: () => void;
   setOnline: (online: boolean) => void;
 };
-
-const freshSession = (mode: Mode): Session => ({
-  messages: [],
-  status: mode === 'demo' ? 'loading' : 'ready',
-  kundli: null,
-  hasOlder: mode === 'demo',
-  olderPage: 0,
-});
 
 let localId = 0;
 const nextId = (prefix: string) => `${prefix}-${++localId}`;
@@ -85,22 +71,14 @@ export const useConversationStore = create<ConversationState>((set, get) => {
   const patchAi = (id: string, patch: Partial<AiMessage>) =>
     updateMessage(id, (message) => (message.type === 'ai' ? { ...message, ...patch } : message));
 
+  const setText = (id: string, text: string) => updateMessage(id, (message) => ({ ...message, text }));
+
+  const append = (message: Message) => set((state) => ({ messages: [...state.messages, message] }));
+
   const cancelInFlight = () => {
     inFlight.forEach((controller) => controller.abort());
     inFlight.clear();
   };
-
-  // A parked session must not look busy, so unfinished work is settled first.
-  const settle = (messages: Message[]): Message[] =>
-    messages.map((message) => {
-      if (message.type === 'user' && message.status === 'sending') {
-        return { ...message, status: 'failed' };
-      }
-      if (message.type === 'ai' && message.isStreaming) {
-        return { ...message, isStreaming: false };
-      }
-      return message;
-    });
 
   /** Parks the current conversation and brings back (or starts) the one for this persona and mode. */
   const switchTo = (personaId: PersonaId, mode: Mode) => {
@@ -111,14 +89,14 @@ export const useConversationStore = create<ConversationState>((set, get) => {
     cancelInFlight();
     loadToken++;
     const { messages, status, kundli, hasOlder, olderPage } = state;
-    const restored = state.parked[`${personaId}:${mode}`];
+    const restored = state.parked[sessionKey(personaId, mode)];
     set({
       ...(restored ?? freshSession(mode)),
       personaId,
       mode,
       parked: {
         ...state.parked,
-        [`${state.personaId}:${state.mode}`]: { messages: settle(messages), status, kundli, hasOlder, olderPage },
+        [sessionKey(state.personaId, state.mode)]: { messages: settle(messages), status, kundli, hasOlder, olderPage },
       },
       isTyping: false,
       isLoadingOlder: false,
@@ -127,34 +105,35 @@ export const useConversationStore = create<ConversationState>((set, get) => {
   };
 
   /**
-   * Gets a reply for everything up to this user message.
-   * Sending… until the source accepts, then Sent and typing dots,
-   * then the reply bubble grows as text streams in.
+   * Streams one reply from the current source into a new message.
+   * Typing dots once the source accepts, then the message grows as text arrives.
+   * Returns 'failed' only when nothing arrived, so the caller can offer Retry.
    */
-  const deliver = async (id: string) => {
+  const streamReply = async (
+    speaker: Speaker,
+    history: Message[],
+    onAccepted: () => void,
+  ): Promise<'done' | 'failed' | 'aborted'> => {
     const controller = new AbortController();
     inFlight.add(controller);
     const { signal } = controller;
-
-    setStatus(id, 'sending');
-    const replyId = nextId('ai');
+    const isHuman = speaker.kind === 'human';
+    const replyId = nextId(isHuman ? 'human' : 'ai');
     let started = false;
 
     try {
-      const { messages, kundli, mode, personaId } = get();
-      const history = messages.slice(0, messages.findIndex((message) => message.id === id) + 1);
-
+      const { kundli, mode, personaId } = get();
       const raw = await replySources[mode]({
+        speaker,
         persona: personas[personaId],
         messages: history,
         kundli,
         signal,
         onOpen: () => {
-          if (signal.aborted) {
-            return;
+          if (!signal.aborted) {
+            onAccepted();
+            set({ isTyping: true });
           }
-          setStatus(id, 'sent');
-          set({ isTyping: true });
         },
         onText: (text) => {
           if (signal.aborted) {
@@ -162,35 +141,56 @@ export const useConversationStore = create<ConversationState>((set, get) => {
           }
           if (!started) {
             started = true;
+            const createdAt = Date.now();
             set((state) => ({
               isTyping: false,
               messages: [
                 ...state.messages,
-                { id: replyId, type: 'ai', text: '', createdAt: Date.now(), isStreaming: true },
+                isHuman
+                  ? { id: replyId, type: 'human', text: '', createdAt }
+                  : { id: replyId, type: 'ai', text: '', createdAt, isStreaming: true },
               ],
             }));
           }
-          patchAi(replyId, { text: visibleText(text) });
+          setText(replyId, visibleText(text));
         },
       });
 
-      if (!signal.aborted) {
-        patchAi(replyId, { ...parseReply(raw, replyId), isStreaming: false });
+      if (signal.aborted) {
+        return 'aborted';
       }
+      const parsed = parseReply(raw, replyId);
+      if (isHuman) {
+        setText(replyId, parsed.text);
+      } else {
+        patchAi(replyId, { ...parsed, isStreaming: false });
+      }
+      return 'done';
     } catch {
       if (signal.aborted) {
-        return;
+        return 'aborted';
       }
       if (started) {
         patchAi(replyId, { isStreaming: false });
-      } else {
-        setStatus(id, 'failed');
+        return 'done';
       }
+      return 'failed';
     } finally {
       inFlight.delete(controller);
       if (!signal.aborted && inFlight.size === 0) {
         set({ isTyping: false });
       }
+    }
+  };
+
+  /** Sending… until the source accepts, then Sent; Failed (with Retry) if no reply arrives. */
+  const deliver = async (id: string) => {
+    setStatus(id, 'sending');
+    const { messages } = get();
+    const history = messages.slice(0, messages.findIndex((message) => message.id === id) + 1);
+    const result = await streamReply({ kind: 'persona' }, history, () => setStatus(id, 'sent'));
+    if (result === 'failed') {
+      setStatus(id, 'failed');
     }
   };
 
@@ -229,18 +229,36 @@ export const useConversationStore = create<ConversationState>((set, get) => {
     isLoadingOlder: false,
     replyingTo: null,
 
-    openChat: (personaId) => {
-      switchTo(personaId, get().mode);
+    openChat: (personaId, mode) => {
+      switchTo(personaId, mode);
       if (get().status === 'loading') {
         get().load();
       }
     },
 
-    setMode: (mode) => {
-      switchTo(get().personaId, mode);
-      if (get().status === 'loading') {
-        get().load();
+    startFreshChat: (personaId) => {
+      switchTo(personaId, 'live');
+      cancelInFlight();
+      loadToken++;
+      set({ ...freshSession('live'), isTyping: false, replyingTo: null });
+    },
+
+    /** A note in the chat, then the human astrologer joins and says hello in her own words. */
+    bookConsultation: async (booking) => {
+      const token = loadToken;
+      append({
+        id: nextId('system'),
+        type: 'system',
+        text: `Call booked with ${humanAstrologer.name} · ${slotLabel(booking.startsAt)} · ${booking.minutes} min`,
+        createdAt: Date.now(),
+      });
+      await wait(1200);
+      // The user may have left this conversation while we waited.
+      if (token !== loadToken) {
+        return;
       }
+      append({ id: nextId('system'), type: 'system', text: `${humanAstrologer.name} joined the chat`, createdAt: Date.now() });
+      await streamReply({ kind: 'human', booking }, get().messages, () => {});
     },
 
     load: async () => {
@@ -252,9 +270,9 @@ export const useConversationStore = create<ConversationState>((set, get) => {
       const token = ++loadToken;
       set({ status: 'loading' });
       try {
-        const messages = await fetchConversation();
+        const { messages, kundli } = await fetchConversation(get().personaId);
         if (token === loadToken) {
-          set({ messages, status: 'ready', hasOlder: true, olderPage: 0 });
+          set({ messages, kundli, status: 'ready', hasOlder: true, olderPage: 0 });
         }
       } catch {
         if (token === loadToken) {
@@ -313,28 +331,15 @@ export const useConversationStore = create<ConversationState>((set, get) => {
         replyingTo: state.replyingTo?.id === id ? null : state.replyingTo,
       })),
 
-    // Tapping the selected rating again clears it.
     rate: (id, rating) =>
-      updateMessage(id, (message) => {
-        if (message.type !== 'ai') {
-          return message;
-        }
-        if (message.feedback?.rating === rating) {
-          return { ...message, feedback: undefined };
-        }
-        const feedback: Feedback = rating === 'like' ? { rating: 'like' } : { rating: 'dislike', reasons: [] };
-        return { ...message, feedback };
-      }),
+      updateMessage(id, (message) =>
+        message.type === 'ai' ? { ...message, feedback: applyRating(message.feedback, rating) } : message,
+      ),
 
     toggleDislikeReason: (id, reason) =>
-      updateMessage(id, (message) => {
-        if (message.type !== 'ai' || message.feedback?.rating !== 'dislike') {
-          return message;
-        }
-        const { reasons } = message.feedback;
-        const next = reasons.includes(reason) ? reasons.filter((item) => item !== reason) : [...reasons, reason];
-        return { ...message, feedback: { rating: 'dislike', reasons: next } };
-      }),
+      updateMessage(id, (message) =>
+        message.type === 'ai' ? { ...message, feedback: toggleReason(message.feedback, reason) } : message,
+      ),
 
     setReplyingTo: (replyingTo) => set({ replyingTo }),
 

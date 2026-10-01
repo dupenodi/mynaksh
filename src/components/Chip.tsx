@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { colors, raisedShadow } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 type ChipProps = {
   label: string;
   onPress?: () => void;
   selected?: boolean;
-  /** plain: small and quiet. suggestion: larger, brass outline, something to say next. */
+  /** plain: small and quiet. suggestion: a raised button, something to say next. */
   tone?: 'plain' | 'suggestion';
   icon?: ReactNode;
 };
@@ -40,25 +40,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
+    backgroundColor: colors.background,
   },
   suggestion: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderColor: 'rgba(214, 172, 94, 0.4)',
-    backgroundColor: 'rgba(214, 172, 94, 0.06)',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 0,
+    boxShadow: raisedShadow,
   },
   selected: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accent,
+    backgroundColor: colors.brandSoft,
+    borderColor: colors.brandLine,
   },
   pressed: {
     opacity: 0.8,
-    transform: [{ scale: 0.97 }],
+    transform: [{ scale: 0.98 }],
   },
   text: {
     fontFamily: fonts.medium,
@@ -66,10 +68,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   suggestionText: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.text,
   },
   selectedText: {
-    color: colors.accent,
+    color: colors.brand,
   },
 });

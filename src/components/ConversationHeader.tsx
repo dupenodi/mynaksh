@@ -19,14 +19,8 @@ type Props = {
   chartOwner: string | null;
   onBack: () => void;
   onProfilePress: () => void;
-  onModeChange: (mode: Mode) => void;
   onMenuPress: () => void;
 };
-
-const MODES: { value: Mode; label: string }[] = [
-  { value: 'demo', label: 'Demo' },
-  { value: 'live', label: 'Live' },
-];
 
 export function ConversationHeader(props: Props) {
   const { persona, mode, isOnline, isTyping, chartOwner } = props;
@@ -43,8 +37,8 @@ export function ConversationHeader(props: Props) {
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 10 }]}>
       <View style={styles.inner}>
-        <IconButton onPress={props.onBack} accessibilityLabel="All astrologers" tone="clear" size={36}>
-          <ChevronLeft size={24} color={colors.text} strokeWidth={1.75} />
+        <IconButton onPress={props.onBack} accessibilityLabel="All astrologers" tone="clear" size={32}>
+          <ChevronLeft size={20} color={colors.text} strokeWidth={1.75} />
         </IconButton>
 
         <Pressable
@@ -53,37 +47,25 @@ export function ConversationHeader(props: Props) {
           accessibilityLabel={`${persona.name}'s profile`}
           style={({ pressed }) => [styles.identity, pressed && styles.pressed]}
         >
-          <Avatar source={persona.avatar} ring={persona.theme.accent} size={40} online={isOnline} />
+          <Avatar source={persona.avatar} size={36} online={isOnline} />
           <View style={styles.titles}>
             <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
               {persona.name}
             </Text>
-            <Text style={[styles.status, isTyping && isOnline && { color: persona.theme.accent }]} numberOfLines={1}>
+            <Text style={[styles.status, isTyping && isOnline && styles.typing]} numberOfLines={1}>
               {status}
             </Text>
           </View>
         </Pressable>
 
-        <View style={styles.modes} accessibilityRole="tablist">
-          {MODES.map(({ value, label }) => {
-            const selected = mode === value;
-            return (
-              <Pressable
-                key={value}
-                onPress={() => props.onModeChange(value)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                style={[styles.mode, selected && styles.modeSelected]}
-              >
-                {value === 'live' ? <View style={[styles.liveDot, selected && styles.liveDotOn]} /> : null}
-                <Text style={[styles.modeText, selected && styles.modeTextSelected]}>{label}</Text>
-              </Pressable>
-            );
-          })}
+        {/* Which kind of chat this is. Simulated and live chats are separate entries on the home screen. */}
+        <View style={styles.mode} accessibilityLabel={mode === 'live' ? 'Live chat' : 'Simulated chat'}>
+          {mode === 'live' ? <View style={styles.liveDot} /> : null}
+          <Text style={styles.modeText}>{mode === 'live' ? 'Live' : 'Simulated'}</Text>
         </View>
 
-        <IconButton onPress={props.onMenuPress} accessibilityLabel="Session options" size={36}>
-          <Ellipsis size={18} color={colors.text} strokeWidth={1.75} />
+        <IconButton onPress={props.onMenuPress} accessibilityLabel="Session options" size={32}>
+          <Ellipsis size={16} color={colors.text} strokeWidth={1.75} />
         </IconButton>
       </View>
 
@@ -99,8 +81,8 @@ export function ConversationHeader(props: Props) {
 
 const styles = StyleSheet.create({
   bar: {
-    paddingBottom: 12,
-    paddingHorizontal: 10,
+    paddingBottom: 10,
+    paddingHorizontal: 12,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.line,
@@ -127,50 +109,38 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   title: {
-    fontFamily: fonts.display,
-    fontSize: 22,
-    lineHeight: 25,
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    letterSpacing: -0.2,
     color: colors.text,
   },
   status: {
+    marginTop: 1,
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.muted,
   },
-  modes: {
-    flexDirection: 'row',
-    padding: 3,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
+  typing: {
+    color: colors.online,
   },
   mode: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  modeSelected: {
-    backgroundColor: colors.accentSoft,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
   },
   modeText: {
     fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.muted,
   },
-  modeTextSelected: {
-    color: colors.accent,
-  },
   liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     marginRight: 5,
-    backgroundColor: colors.faint,
-  },
-  liveDotOn: {
     backgroundColor: colors.online,
   },
   banner: {
@@ -180,10 +150,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: CONTENT_MAX_WIDTH,
     alignSelf: 'center',
-    marginTop: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
     backgroundColor: colors.dangerTint,
   },
   bannerText: {

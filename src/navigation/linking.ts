@@ -9,7 +9,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
     screens: {
       Astrologers: '',
       Profile: 'astrologer/:personaId',
-      Chat: 'chat/:personaId',
+      Chat: 'chat/:mode/:personaId',
     },
   },
 };

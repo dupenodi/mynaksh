@@ -1,15 +1,16 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { colors, raisedShadow } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 type ButtonProps = {
   label: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'regular' | 'large';
   disabled?: boolean;
-  /** Small second line under the label, such as a price. */
+  /** Small text after the label, such as a price. */
   caption?: string;
   icon?: ReactNode;
   accessibilityLabel?: string;
@@ -20,6 +21,7 @@ export function Button({
   label,
   onPress,
   variant = 'primary',
+  size = 'regular',
   disabled = false,
   caption,
   icon,
@@ -37,6 +39,7 @@ export function Button({
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.base,
+        size === 'large' && styles.large,
         styles[variant],
         disabled && styles.disabled,
         pressed && styles.pressed,
@@ -46,13 +49,18 @@ export function Button({
       <View style={styles.row}>
         {icon}
         <Text
-          style={[styles.label, primary ? styles.primaryLabel : styles.quietLabel, disabled && styles.disabledLabel]}
+          style={[
+            styles.label,
+            size === 'large' && styles.largeLabel,
+            primary ? styles.primaryLabel : styles.quietLabel,
+            disabled && styles.disabledLabel,
+          ]}
           numberOfLines={1}
         >
           {label}
         </Text>
+        {caption ? <Text style={[styles.caption, primary && styles.primaryCaption]}>{caption}</Text> : null}
       </View>
-      {caption ? <Text style={[styles.caption, primary && styles.primaryCaption]}>{caption}</Text> : null}
     </Pressable>
   );
 }
@@ -71,7 +79,7 @@ export function IconButton({
   onPress,
   accessibilityLabel,
   children,
-  size = 40,
+  size = 36,
   tone = 'surface',
   disabled = false,
   style,
@@ -87,9 +95,9 @@ export function IconButton({
       style={({ pressed }) => [
         styles.icon,
         { width: size, height: size, borderRadius: size / 2 },
-        tone === 'surface' && styles.iconSurface,
-        tone === 'accent' && styles.iconAccent,
-        pressed && styles.iconPressed,
+        tone === 'surface' && styles.secondary,
+        tone === 'accent' && styles.primary,
+        pressed && styles.pressed,
         style,
       ]}
     >
@@ -100,30 +108,31 @@ export function IconButton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 50,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
+    minHeight: 40,
+    paddingHorizontal: 18,
+    // Pills, as on mynaksh.com.
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  large: {
+    minHeight: 48,
+    paddingHorizontal: 22,
+  },
   primary: {
     backgroundColor: colors.accent,
-    boxShadow: '0 10px 28px rgba(214, 172, 94, 0.22)',
   },
   secondary: {
-    borderWidth: 1,
-    borderColor: colors.lineStrong,
+    backgroundColor: colors.background,
+    boxShadow: raisedShadow,
   },
-  ghost: {
-    minHeight: 44,
-  },
+  ghost: {},
   disabled: {
     backgroundColor: colors.surfaceRaised,
     boxShadow: 'none',
   },
   pressed: {
-    opacity: 0.86,
+    opacity: 0.8,
     transform: [{ scale: 0.98 }],
   },
   row: {
@@ -132,9 +141,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    letterSpacing: 0.1,
+    fontFamily: fonts.medium,
+    fontSize: 14,
+  },
+  largeLabel: {
+    fontSize: 15,
   },
   primaryLabel: {
     color: colors.onAccent,
@@ -146,28 +157,15 @@ const styles = StyleSheet.create({
     color: colors.faint,
   },
   caption: {
-    marginTop: 1,
     fontFamily: fonts.body,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.muted,
   },
   primaryCaption: {
-    color: 'rgba(26, 20, 8, 0.66)',
+    color: colors.onAccentMuted,
   },
   icon: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconSurface: {
-    backgroundColor: colors.surfaceRaised,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  iconAccent: {
-    backgroundColor: colors.accent,
-  },
-  iconPressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.94 }],
   },
 });

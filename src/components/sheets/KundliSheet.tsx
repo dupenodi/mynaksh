@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import type { Kundli } from '../../domain/kundli';
 import { colors } from '../../theme/colors';
-import { fonts } from '../../theme/typography';
+import { fonts, displayTracking } from '../../theme/typography';
 import { KundliForm } from '../kundli/KundliForm';
 import { Sheet } from '../Sheet';
 
@@ -38,8 +38,9 @@ export function KundliSheet({ visible, initial, onClose, onAttach }: Props) {
 const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.display,
-    fontSize: 30,
-    lineHeight: 34,
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: displayTracking(28),
     color: colors.text,
   },
   caption: {

@@ -1,9 +1,11 @@
 import { ChevronRight } from 'lucide-react-native';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { Toggle } from '../Toggle';
 
 import type { Mode } from '../../state/conversationStore';
 import { colors } from '../../theme/colors';
-import { fonts } from '../../theme/typography';
+import { fonts, displayTracking } from '../../theme/typography';
 import { Sheet } from '../Sheet';
 
 type Props = {
@@ -32,11 +34,9 @@ export function SettingsSheet({ visible, mode, isOnline, onClose, onToggleOnline
             <Text style={styles.label}>Simulate offline</Text>
             <Text style={styles.hint}>Messages fail to send and can be retried.</Text>
           </View>
-          <Switch
+          <Toggle
             value={!isOnline}
             onValueChange={(offline) => onToggleOnline(!offline)}
-            trackColor={{ true: colors.accent, false: colors.lineStrong }}
-            thumbColor={colors.text}
             accessibilityLabel="Simulate offline"
           />
         </View>
@@ -77,8 +77,9 @@ function Row({ label, hint, onPress }: { label: string; hint: string; onPress: (
 const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.display,
-    fontSize: 30,
-    lineHeight: 34,
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: displayTracking(28),
     color: colors.text,
   },
   caption: {
@@ -90,9 +91,10 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   group: {
-    borderRadius: 18,
+    borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   row: {
     flexDirection: 'row',
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.line,
   },
   pressed: {
-    backgroundColor: colors.line,
+    backgroundColor: colors.surface,
   },
   rowText: {
     flex: 1,

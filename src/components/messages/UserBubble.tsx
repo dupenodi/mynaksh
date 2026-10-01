@@ -1,4 +1,5 @@
 import { CircleAlert, RotateCw } from 'lucide-react-native';
+import { useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { UserMessage } from '../../domain/message';
@@ -7,6 +8,7 @@ import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { KundliCard } from '../kundli/KundliCard';
 import type { MessageRowProps } from './MessageRow';
+import { SwipeToReply } from './SwipeToReply';
 
 const statusText: Record<UserMessage['status'], string> = {
   sending: 'Sending',
@@ -18,25 +20,36 @@ export function UserBubble({
   message,
   startsGroup,
   endsGroup,
+  selected,
   onLongPress,
+  onAction,
   onRetry,
 }: MessageRowProps & { message: UserMessage }) {
   const failed = message.status === 'failed';
   const showMeta = endsGroup || message.status !== 'sent';
+  const bubbleRef = useRef<View>(null);
+
+  const openMenu = () =>
+    bubbleRef.current?.measureInWindow((x, y, width, height) => onLongPress(message, { x, y, width, height }));
 
   return (
-    <View style={[styles.row, showMeta ? styles.groupEnd : styles.groupGap]}>
+    <SwipeToReply
+      onReply={() => onAction('reply', message)}
+      style={showMeta ? styles.groupEnd : styles.groupGap}
+      contentStyle={styles.row}
+    >
       <Pressable
-        onLongPress={() => onLongPress(message)}
+        ref={bubbleRef}
+        onLongPress={openMenu}
         delayLongPress={350}
-        accessibilityHint="Long press for options"
+        accessibilityHint="Swipe right to reply. Long press for more."
         style={({ pressed }) => [
           styles.bubble,
           !startsGroup && styles.joined,
           !endsGroup && styles.continues,
           message.status === 'sending' && styles.sending,
           failed && styles.failed,
-          pressed && styles.pressed,
+          (pressed || selected) && styles.pressed,
         ]}
       >
         {message.replyTo ? (
@@ -75,7 +88,7 @@ export function UserBubble({
           )}
         </View>
       ) : null}
-    </View>
+    </SwipeToReply>
   );
 }
 
@@ -93,23 +106,23 @@ const styles = StyleSheet.create({
     maxWidth: '82%',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 22,
+    borderRadius: 18,
     backgroundColor: colors.paper,
   },
   joined: {
-    borderTopRightRadius: 8,
+    borderTopRightRadius: 6,
   },
   continues: {
-    borderBottomRightRadius: 8,
+    borderBottomRightRadius: 6,
   },
   sending: {
     opacity: 0.6,
   },
   failed: {
-    backgroundColor: 'rgba(238, 228, 206, 0.55)',
+    backgroundColor: colors.dangerTint,
   },
   pressed: {
-    opacity: 0.88,
+    backgroundColor: colors.paperPressed,
     transform: [{ scale: 0.985 }],
   },
   text: {
@@ -123,12 +136,12 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingVertical: 2,
     borderLeftWidth: 2,
-    borderLeftColor: '#B08A45',
+    borderLeftColor: colors.brand,
   },
   quoteAuthor: {
     fontFamily: fonts.semibold,
     fontSize: 12,
-    color: '#8A6A2F',
+    color: colors.brand,
   },
   quoteText: {
     marginTop: 1,
@@ -161,7 +174,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(236, 138, 118, 0.45)',
+    borderColor: colors.dangerLine,
   },
   retryText: {
     fontFamily: fonts.semibold,

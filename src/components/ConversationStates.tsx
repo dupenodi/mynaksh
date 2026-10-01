@@ -11,8 +11,8 @@ import Animated, {
 
 import type { Persona } from '../domain/personas';
 import { colors } from '../theme/colors';
-import { fonts } from '../theme/typography';
-import { ArchPortrait } from './ArchPortrait';
+import { fonts, displayTracking } from '../theme/typography';
+import { Avatar } from './Avatar';
 import { Button } from './Button';
 import { Chip } from './Chip';
 import { AVATAR_GAP, AVATAR_SIZE, CONTENT_MAX_WIDTH, SCREEN_GUTTER } from './layout';
@@ -49,7 +49,7 @@ export function LoadError({ onRetry }: { onRetry: () => void }) {
   return (
     <View style={styles.center}>
       <View style={styles.errorIcon}>
-        <CloudOff size={26} color={colors.accent} strokeWidth={1.5} />
+        <CloudOff size={22} color={colors.text} strokeWidth={1.5} />
       </View>
       <Text style={styles.title}>Couldn’t load this conversation</Text>
       <Text style={styles.body}>Check your connection, then try again. Your messages are safe.</Text>
@@ -68,7 +68,8 @@ export function EmptyState({ persona, onPick, onShareKundli }: EmptyStateProps) 
   return (
     <ScrollView contentContainerStyle={styles.emptyScroll} keyboardShouldPersistTaps="handled">
       <Animated.View entering={FadeInDown.duration(450)} style={styles.empty}>
-        <ArchPortrait source={persona.avatar} aspectRatio={0.82} fadeTo={colors.background} style={styles.portrait} />
+        <Avatar source={persona.avatar} size={64} />
+        <Text style={styles.title}>{persona.name}</Text>
         <Text style={styles.quote}>“{persona.quote}”</Text>
         <Text style={styles.body}>
           Share your birth details so {persona.name} can read your chart, or start with a question.
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
   },
   bone: {
     height: 46,
-    borderRadius: 22,
+    borderRadius: 14,
     backgroundColor: colors.surface,
   },
   pill: {
@@ -135,18 +136,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   errorIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18,
-    backgroundColor: colors.accentSoft,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   title: {
+    marginTop: 14,
     fontFamily: fonts.display,
-    fontSize: 28,
-    lineHeight: 32,
+    fontSize: 26,
+    lineHeight: 30,
+    letterSpacing: displayTracking(26),
     color: colors.text,
     textAlign: 'center',
   },
@@ -172,16 +176,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 28,
   },
-  portrait: {
-    width: 170,
-  },
   quote: {
-    maxWidth: 380,
-    marginTop: -6,
-    fontFamily: fonts.displayItalic,
-    fontSize: 24,
-    lineHeight: 30,
-    color: colors.text,
+    maxWidth: 360,
+    marginTop: 8,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    lineHeight: 23,
+    color: colors.muted,
     textAlign: 'center',
   },
   suggestions: {

@@ -7,11 +7,13 @@ import type { Persona } from '../../domain/personas';
 import type { Recommendation } from '../../domain/recommendation';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
+import type { MessageAction, MessageAnchor } from './MessageMenu';
 import { AdvisorMessage } from './AdvisorMessage';
 import { UserBubble } from './UserBubble';
 
 export type MessageActions = {
-  onLongPress: (message: Message) => void;
+  onLongPress: (message: Message, anchor: MessageAnchor) => void;
+  onAction: (action: MessageAction, message: Message) => void;
   onRecommendationPress: (recommendation: Recommendation) => void;
   onRate: (id: string, rating: Feedback['rating']) => void;
   onToggleReason: (id: string, reason: DislikeReason) => void;
@@ -26,6 +28,8 @@ export type MessageRowProps = MessageActions & {
   startsGroup: boolean;
   endsGroup: boolean;
   isLatest: boolean;
+  /** The message whose menu is open, drawn highlighted. */
+  selected: boolean;
   persona: Persona;
   kundli: Kundli | null;
   savedKundli: Kundli | null;
@@ -88,8 +92,8 @@ const styles = StyleSheet.create({
   },
   systemText: {
     marginHorizontal: 12,
-    fontFamily: fonts.displayItalic,
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontSize: 12,
     color: colors.muted,
     textAlign: 'center',
     flexShrink: 1,

@@ -1,41 +1,41 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowUpRight } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Recommendation } from '../domain/recommendation';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
-import { getAppearance } from './appearance';
+import { cardImage, getExperience } from './catalog';
+
+export const CARD_WIDTH = 200;
+export const CARD_GAP = 10;
 
 export type RecommendationCardProps = {
   recommendation: Recommendation;
   onPress: (recommendation: Recommendation) => void;
 };
 
-/** Artwork fills the card; the title sits on a dark fade at its foot. */
+/** Artwork in an inset frame on top, the words underneath on white. */
 export function RecommendationCard({ recommendation, onPress }: RecommendationCardProps) {
-  const look = getAppearance(recommendation.type);
+  const look = getExperience(recommendation.type);
+  const image = cardImage(recommendation, look);
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${look.label}: ${recommendation.title}`}
       onPress={() => onPress(recommendation)}
-      style={({ pressed }) => [styles.card, { backgroundColor: look.wash }, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      {look.image ? (
-        <Image source={look.image} style={styles.image} resizeMode="cover" />
-      ) : (
-        <Text style={[styles.bigGlyph, { color: look.tint }]}>{look.glyph}</Text>
-      )}
-      <LinearGradient
-        colors={['rgba(8, 10, 22, 0.3)', 'rgba(8, 10, 22, 0)', 'rgba(8, 10, 22, 0.7)', '#080A16']}
-        locations={[0, 0.22, 0.56, 0.74]}
-        style={styles.overlay}
-      />
-
-      <View style={styles.label}>
-        <Text style={[styles.labelGlyph, { color: look.tint }]}>{look.glyph}</Text>
-        <Text style={styles.labelText}>{look.label}</Text>
+      <View style={[styles.art, { backgroundColor: look.wash }]}>
+        {image ? (
+          <Image source={image} style={styles.image} resizeMode="cover" />
+        ) : (
+          <Text style={[styles.bigGlyph, { color: look.tint }]}>{look.glyph}</Text>
+        )}
+        <View style={styles.label}>
+          <Text style={[styles.labelGlyph, { color: look.tint }]}>{look.glyph}</Text>
+          <Text style={styles.labelText}>{look.label}</Text>
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -47,89 +47,100 @@ export function RecommendationCard({ recommendation, onPress }: RecommendationCa
             {recommendation.subtitle}
           </Text>
         ) : null}
-        <Text style={[styles.cta, { color: look.tint }]}>{look.cta}</Text>
+        <View style={styles.footer}>
+          <Text style={styles.cta}>{look.cta}</Text>
+          <ArrowUpRight size={14} color={colors.faint} strokeWidth={1.75} />
+        </View>
       </View>
     </Pressable>
   );
 }
 
-/** Same layout; getAppearance gives unknown types a neutral look and no artwork. */
+/** Same layout; getExperience gives unknown types a neutral look and no artwork. */
 export function FallbackCard(props: RecommendationCardProps) {
   return <RecommendationCard {...props} />;
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFill,
-    pointerEvents: 'none',
-  },
   card: {
-    width: 200,
-    height: 250,
-    marginRight: 12,
-    borderRadius: 22,
-    overflow: 'hidden',
-    justifyContent: 'space-between',
+    width: CARD_WIDTH,
+    marginRight: CARD_GAP,
+    padding: 5,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.lineStrong,
+    borderColor: colors.line,
+    backgroundColor: colors.background,
   },
   pressed: {
-    transform: [{ scale: 0.97 }],
-    opacity: 0.94,
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
   },
+  art: {
+    height: 120,
+    borderRadius: 11,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Explicit size: on web an Image without a width takes the file's own width.
   image: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+    ...StyleSheet.absoluteFill,
     width: '100%',
-    height: '76%',
+    height: '100%',
   },
   bigGlyph: {
-    position: 'absolute',
-    top: 70,
-    alignSelf: 'center',
-    fontSize: 56,
-    opacity: 0.6,
+    fontSize: 40,
   },
   label: {
+    position: 'absolute',
+    top: 7,
+    left: 7,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 5,
-    margin: 10,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(8, 10, 22, 0.6)',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: colors.frosted,
   },
   labelGlyph: {
-    fontSize: 10,
+    fontSize: 9,
   },
   labelText: {
     fontFamily: fonts.medium,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.text,
   },
   body: {
-    padding: 14,
-    paddingTop: 0,
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
   },
   title: {
-    fontFamily: fonts.display,
-    fontSize: 22,
-    lineHeight: 24,
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    lineHeight: 19,
+    letterSpacing: -0.1,
     color: colors.text,
   },
   subtitle: {
-    marginTop: 4,
+    marginTop: 2,
     fontFamily: fonts.body,
-    fontSize: 13,
-    lineHeight: 18,
-    color: 'rgba(236, 228, 211, 0.72)',
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.muted,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 'auto',
+    paddingTop: 10,
   },
   cta: {
-    marginTop: 10,
-    fontFamily: fonts.semibold,
-    fontSize: 13,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.text,
   },
 });

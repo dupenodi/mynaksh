@@ -12,24 +12,47 @@ AI conversation experience for the MyNaksh frontend assessment. Pick one of thre
 
 All three are parody personas, labelled as such in the app. Their avatars live in `assets/images` as 512px square JPEGs cropped to the face.
 
-**How a persona is built** (`domain/personas.ts`): one data object holds the profile (bio, stats, reviews, fee, specialties), the theme colors, the `voice` prompt with a few example lines, and the demo-mode lines. Adding a fourth persona means adding one object; the list, profile, chat and both reply sources pick it up.
+**How a persona is built** (`domain/personas/`): one file per persona holds the profile (bio, stats, reviews, fee, specialties), the theme colors, the `voice` prompt with a few example lines, and the demo-mode lines. Adding a fourth persona means one new file, its id in `PersonaId`, and one line in `personas/index.ts`; the list, profile, chat and both reply sources pick it up.
 
 **Keeping them human**: every persona's voice is wrapped in shared rules. Talk like a real person texting, one to three sentences, comfort before questions, catchphrases used sparingly, never copy the example lines.
 
-## Two modes
+## Simulated and live chats
 
-Switch with the **Demo / Live** toggle in the chat header. Every persona keeps its own conversation per mode (six in total), so switching persona or mode loses nothing.
+The home screen has two sections, split by a divider.
 
-| | Demo | Live |
+| | Simulated chats | Live chat |
 | --- | --- | --- |
-| Starts with | The brief's mock payload, plus two pages of older history | An empty conversation |
+| What it is | One complete, hand-written session per persona | Your own fresh conversation with a persona you pick |
+| Starts with | The full session, plus older history (the brief's payload first) | An empty chat |
 | Replies from | A local script that streams like the real thing | A real model through OpenRouter |
 | Needs an API key | No | Yes |
-| Good for | Showing every feature in a predictable order | Actually talking to the astrologers |
+| Shows | Every experience, in each persona's voice | Whatever the model chooses, every value written by the model |
+
+Each persona keeps one conversation per mode, so moving between chats loses nothing. "Start a new live chat" always starts empty. The chat header shows a *Simulated* or *Live* badge.
+
+**The three simulated sessions** show different things: Dhuni Baba (career) has birth details, chart analysis, tarot, remedies, muhurat, panchang, a booked call with the human astrologer, and a summary. Kantara (a land dispute) has a reversed tarot card, a yantra, an emerald, a puja, signing dates and an article. Sanju Baba (a breakup) has compatibility, Moon remedies, a horoscope and a 45-minute call.
+
+## Experiences in the chat
+
+| Experience | How it shows | Interaction |
+| --- | --- | --- |
+| Birth details | Inline form, then a "Shared" receipt | Live chart preview while typing |
+| Chart analysis | Card: placements grid, strengths, challenges | — |
+| Tarot | Three face-down cards | Tap to flip; reversed cards are drawn upside down; meanings build up underneath |
+| Panchang | Card: tithi, nakshatra, yoga, sunrise and sunset, good hours, Rahu Kaal | — |
+| Gemstone and other products | Card with the stone's artwork (picked by key from the Navaratna set) | Sheet with why and facts (planet, finger, metal, day, weight) |
+| Mantra | Card, then a sheet with the chant in large type | Tap the bead to count to 108 |
+| Remedy and meditation | Sheet with steps | Tick off steps as you do them |
+| Muhurat | Sheet with dated windows | Pick one to set a reminder |
+| Consultation | Sheet: how it works, then today's slots (computed) | Booking adds a note; Acharya Meera joins the chat and writes her own hello |
+| Tarot, panchang, compatibility cards | Card | The call to action asks the astrologer, so the chat moves on |
+| Summary | Card at the end of a session | Points to feedback |
+
+**Dynamic, not hard-coded**: in live mode every card, reading and value comes from the model (Ruby or Sapphire, which tarot cards, which dates). The app only owns the artwork, which the model picks by key; an unknown key falls back to the type's symbol.
 
 ## Screens
 
-`Astrologers` (home) → `Profile` → `Chat`, on a React Navigation native stack. Each screen also has a URL on the web (`/`, `/astrologer/kantara`, `/chat/sanju-baba`), so refresh and shared links work.
+`Astrologers` (home) → `Profile` → `Chat`, on a React Navigation native stack. Each screen also has a URL on the web (`/`, `/astrologer/kantara`, `/chat/demo/sanju-baba`, `/chat/live/kantara`), so refresh and shared links work.
 
 ## Run
 
@@ -71,21 +94,28 @@ Expo is the runnable shell so a reviewer can open the app in a browser. The UI i
 ## Project structure
 
 ```text
-assets/images/           card artwork and the human astrologer portrait (generated with ChatGPT)
+assets/images/           card artwork, gems/ (Navaratna) and tarot/ (Major Arcana + card back), all generated with ChatGPT
 api/                     Vercel function: /api/chat
 server/                  OpenRouter helper and the local proxy (same behaviour as the function)
 src/
   components/            header, composer, avatar, chip, sheet, toast, loading / empty / error states
   components/messages/   message row, user bubble, advisor message, feedback, reply widgets, typing
   components/kundli/     kundli form, chart (SVG) and the attachment card
-  components/sheets/     kundli, long-press actions, card detail, session options
+  components/sheets/     kundli, card detail, session options
+  components/astrologers/  home list row, tab bar, top-bar icon button
+  components/profile/    profile sections: stat, section, detail, review
   data/                  mock conversation and history, simulated network
-  data/replies/          reply format, live source (OpenRouter), demo source (script)
-  domain/                messages, recommendations, kundli, personas, human astrologer
+  data/replies/          protocol (format + parser), session arc, prompt builder, SSE reader, live source, demo script + source
+  data/simulated/        the three hand-written persona sessions, built through the real reply parser
+  data/samples.ts        sample cards and readings shared by the demo script and the simulated chats
+  media/                 image sets the model picks from by key (gems, tarot)
+  lib/                   safe readers for model-written JSON
+  domain/                messages, feedback rules, recommendations, kundli, personas/ (one file each), human astrologer
   navigation/            root stack and web URLs
-  recommendations/       type → card registry and per-type appearance
+  recommendations/       grouped catalog (catalog/<group>.ts), type → card registry, card and rail, details/ (per-type sheets)
   screens/               astrologer list, persona profile, chat
-  state/                 Zustand store and the timeline builder
+  state/                 Zustand store, session helpers, selectors and the timeline builder
+  widgets/               reply widgets: kinds/ (parse, encode, prompt per kind), components, registry
   theme/                 color and typography tokens
 ```
 
@@ -95,7 +125,7 @@ src/
 AstrologersScreen            persona cards → Profile or Chat
 PersonaProfileScreen         hero, stats, about, how he talks, specialties, details, reviews, sticky CTA
 ConversationScreen
-├── ConversationHeader       back, persona (tap → profile), status, Demo / Live switch, ••• menu
+├── ConversationHeader       back, persona (tap → profile), status, Simulated / Live badge, ••• menu
 ├── LoadingSkeleton | LoadError | EmptyState
 ├── FlatList (inverted)
 │   ├── DaySeparator
@@ -104,11 +134,11 @@ ConversationScreen
 │   │   ├── UserBubble       kundli card, reply quote, Sending… / Sent / Failed + Retry
 │   │   └── AdvisorMessage   the AI persona and the human astrologer share this layout
 │   │       ├── recommendation rail → resolveRecommendationCard(type)
-│   │       ├── MessageWidgets   inline kundli form, quick replies
+│   │       ├── WidgetList       inline kundli form, quick replies (widgets/registry)
 │   │       └── FeedbackBar      👍 / 👎 → dislike reasons
 │   └── TypingIndicator      list header, so it sits at the bottom
 ├── Composer                 ＋ attach kundli, reply preview, input
-└── Sheets                   KundliSheet, MessageActionsSheet, RecommendationSheet, SettingsSheet
+└── Sheets                   KundliSheet, RecommendationSheet, SettingsSheet, plus MessageMenu (long-press)
 ```
 
 - **The screen does the wiring.** It reads the store, holds UI-only state (which sheet is open, the toast) and passes callbacks down.
@@ -133,17 +163,21 @@ ConversationScreen
 
 ## The AI (kept simple)
 
-There is no agent framework: one system prompt (persona voice plus shared rules) and one streaming request per message.
+There is no agent framework: one system prompt (persona voice, shared rules, the session arc and the UI guide) and one streaming request per message.
+- **Session arc** (`data/replies/arc.ts`): take details → first analysis → find the problem → go deeper (tarot) → remedies → timing → offer the human astrologer → summary. A pure function works out which stages the conversation has already covered from what was shown, and each request tells the model the next one to aim for and what not to repeat. It guides the model; it doesn't script it.
 - **UI from the reply**: the model writes normal text, then optionally `⟦UI⟧` and a JSON object:
   ```json
-  { "form": "kundli", "cards": [{ "type": "gemstone", "title": "Blue Sapphire" }], "replies": ["Career", "Love"] }
+  { "cards": [{ "type": "gemstone", "title": "Ruby", "image": "ruby", "why": "…", "facts": [{ "label": "Finger", "value": "Ring" }] }],
+    "tarot": { "cards": [{ "name": "The Star", "position": "Future", "reversed": false, "meaning": "…" }] },
+    "replies": ["Tell me more", "What else?"] }
   ```
   - `form` shows the inline kundli form, used when the astrologer needs birth details.
-  - `cards` become recommendation cards through the normal registry.
+  - `cards` become recommendation cards through the normal registry. Each card can carry `image`, `why`, `facts` and type-specific `extra` fields (mantra text, remedy steps, muhurat dates, call length).
+  - `analysis`, `tarot`, `panchang` and `summary` become inline reading widgets.
   - `replies` become tap-to-send chips. They show only under the latest message, since older suggestions answer a question that has moved on.
-- **One format, two sources**: `data/replies/protocol.ts` defines the format and the parser. `liveReply` streams from OpenRouter and `demoReply` streams the persona's scripted lines. The store picks one by mode, and the UI never knows which one answered.
+- **One format, two sources**: `data/replies/protocol.ts` defines the format, the encoder and the parser. `prompt.ts` builds the system prompt; its card and widget sections are generated from the catalog and widget definitions. `liveReply` streams from OpenRouter and `demoReply` streams the persona's scripted lines. The store picks one by mode, and the UI never knows which one answered.
 - **Safe parsing**: while streaming, everything after the marker is hidden. At the end the JSON is validated, and bad JSON just means no extra UI.
-- **Context**: the last 20 messages go to the model. Quoted replies and an attached kundli are written into the text, and a shared kundli also goes into the system prompt.
+- **Context**: the last 24 messages go to the model, each AI turn noting which cards and widgets it showed. Quoted replies and an attached kundli are written into the text, and a shared kundli also goes into the system prompt.
 - **Streaming** uses `expo/fetch`, which gives a readable response stream on iOS, Android and web.
 - **Model**: `anthropic/claude-haiku-4.5` by default, which can be changed with `OPENROUTER_MODEL` in `.env`.
 
@@ -157,12 +191,22 @@ There is no agent framework: one system prompt (persona voice plus shared rules)
 ## Recommendation rendering strategy
 
 1. **Data**: `Recommendation = { id, type, title, subtitle? }`. `type` is `KnownRecommendationType | (string & {})`, which gives autocomplete for known types but still accepts unknown strings from the backend or the model.
-2. **Registry** (`recommendations/registry.ts`): a `Map<type, Component>`. `resolveRecommendationCard(type)` returns the registered card, or `FallbackCard` for anything unknown, so a new type never crashes the chat. "Moon Meditation" shows this.
-3. **Appearance** (`recommendations/appearance.ts`): a map from type to label, glyph, colors, artwork, blurb and call to action. Most types share one card and differ only by this data.
+2. **Catalog** (`recommendations/catalog/`): one file per group, each a map from type to label, glyph, colors, optional artwork, blurb, call to action and a `hint` for the model. `KnownRecommendationType` is derived from the catalog's keys.
 
-**Adding a type** takes one entry in `KNOWN_RECOMMENDATION_TYPES` and one in the appearance map; that is how Panchang and Remedy were added. The live prompt lists the known types automatically, so the model can use a new type straight away. A type that needs a different UI registers its own component with `registerRecommendation`.
+   | Group | Types |
+   | --- | --- |
+   | Readings | tarot, horoscope, compatibility, consultation |
+   | Rituals | remedy, mantra, meditation, puja |
+   | Products | gemstone, rudraksha, yantra |
+   | Timing | panchang, muhurat |
+   | Learn | article |
+   | Offers | promotion |
 
-**Reply widgets** follow the same idea: `ReplyWidget` is a union, and `MessageWidgets` has one `case` per kind.
+3. **Registry** (`recommendations/registry.ts`): a `Map<type, Component>`. `resolveRecommendationCard(type)` returns the registered card, or `FallbackCard` for anything unknown, so a new type never crashes the chat. "Dream Journal" in the older history shows this.
+
+**Adding a type** takes one entry in its group file. **Adding a group** takes a new file in `catalog/`, an id in `ExperienceGroupId`, and an entry in `groups.ts`. The live prompt lists the types by group with their hints, so the model can use a new type straight away. A type that needs a different UI registers its own component with `registerRecommendation`.
+
+**Reply widgets** follow the same idea: `ReplyWidget` is a union; `widgets/definitions.ts` says how each kind is parsed from the reply and described to the model; `widgets/registry.tsx` maps each kind to its component. Both maps are typed exhaustively, so a new kind that misses a step fails to compile.
 
 ## Performance considerations
 
@@ -171,7 +215,7 @@ There is no agent framework: one system prompt (persona voice plus shared rules)
 - **`maintainVisibleContentPosition`** keeps the reading position steady when a message is deleted or history is prepended.
 - **Memoised rows, stable callbacks**: actions are read once from the store, and the screen subscribes with a shallow selector. While a reply streams, only that row re-renders.
 - **Animations run on the UI thread** (Reanimated). Only messages created after the screen opened animate in.
-- **Images** are resized JPEGs, about 1.4 MB in total.
+- **Images** are resized, compressed JPEGs, about 6 MB in total, most of it the 22 tarot cards.
 
 ## Feature checklist
 
@@ -180,7 +224,7 @@ There is no agent framework: one system prompt (persona voice plus shared rules)
 | User / AI / Human / System messages | `components/messages/` |
 | Virtualized list, auto-scroll, date separators, grouping | `ConversationScreen`, `state/timeline.ts` |
 | Multiple horizontal recommendation cards, extensible | `recommendations/` |
-| Long-press: Reply, Copy, Delete | `MessageActionsSheet` (Retry also offered on failed sends) |
+| Long-press: Reply, Copy, Delete (Delete only on your own messages) | `MessageMenu` (Retry also offered on failed sends; swipe right to reply) |
 | Reply preview above the composer | `Composer` |
 | 👍 Like / 👎 Dislike, then Inaccurate / Too Generic / Didn't Help / Too Long | `FeedbackBar` |
 | Optimistic send with Sending… / Sent / Failed / Retry | store `deliver`, `UserBubble` |

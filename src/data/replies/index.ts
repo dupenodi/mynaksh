@@ -11,3 +11,4 @@ export const replySources: Record<Mode, ReplySource> = {
 };
 
 export { parseReply, visibleText } from './protocol';
+export type { Speaker } from './protocol';

@@ -9,7 +9,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View,
   type ListRenderItemInfo,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -22,23 +21,25 @@ import { Composer } from '../components/Composer';
 import { ConversationHeader } from '../components/ConversationHeader';
 import { EmptyState, LoadError, LoadingSkeleton } from '../components/ConversationStates';
 import { CONTENT_MAX_WIDTH, SCREEN_GUTTER } from '../components/layout';
+import { MessageMenu, type MenuTarget, type MessageAction, type MessageAnchor } from '../components/messages/MessageMenu';
 import { DaySeparator, MessageRow } from '../components/messages/MessageRow';
+import { pressHaptic } from '../components/messages/haptics';
 import { TypingIndicator } from '../components/messages/TypingIndicator';
 import { KundliSheet } from '../components/sheets/KundliSheet';
-import { MessageActionsSheet, type MessageAction } from '../components/sheets/MessageActionsSheet';
 import { RecommendationSheet } from '../components/sheets/RecommendationSheet';
 import { SettingsSheet } from '../components/sheets/SettingsSheet';
 import { Toast } from '../components/Toast';
 import { humanAstrologer } from '../domain/advisors';
-import type { Kundli } from '../domain/kundli';
+import { firstName, type Kundli } from '../domain/kundli';
 import type { Message, ReplyRef } from '../domain/message';
-import { personaList, personas, type Persona } from '../domain/personas';
+import { getPersona, type Persona } from '../domain/personas';
 import type { Recommendation } from '../domain/recommendation';
+import { goBackOrHome } from '../navigation/goBack';
 import type { RootStackParamList } from '../navigation/types';
-import { getAppearance } from '../recommendations/appearance';
+import type { DetailActions } from '../recommendations/details';
 import { useConversationStore, type Mode } from '../state/conversationStore';
 import { buildTimeline, type TimelineItem } from '../state/timeline';
-import { colors } from '../theme/colors';
+import { colors, liftShadow } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 // Store actions never change, so they are read once instead of subscribed to.
@@ -47,11 +48,11 @@ const actions = useConversationStore.getState();
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
 export function ConversationScreen({ route, navigation }: Props) {
-  const persona = personas[route.params.personaId] ?? personaList[0];
-  const { mode, messages, status, kundli, savedKundli, isOnline, isTyping, hasOlder, isLoadingOlder, replyingTo } =
+  const persona = getPersona(route.params.personaId);
+  const mode: Mode = route.params.mode === 'live' ? 'live' : 'demo';
+  const { messages, status, kundli, savedKundli, isOnline, isTyping, hasOlder, isLoadingOlder, replyingTo } =
     useConversationStore(
       useShallow((state) => ({
-        mode: state.mode,
         messages: state.messages,
         status: state.status,
         kundli: state.kundli,
@@ -65,7 +66,7 @@ export function ConversationScreen({ route, navigation }: Props) {
     );
 
   const listRef = useRef<FlatList<TimelineItem>>(null);
-  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [menu, setMenu] = useState<MenuTarget | null>(null);
   const [selectedCard, setSelectedCard] = useState<Recommendation | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [kundliOpen, setKundliOpen] = useState(false);
@@ -75,10 +76,10 @@ export function ConversationScreen({ route, navigation }: Props) {
   // Messages older than the screen do not animate in, so history appears calmly.
   const openedAt = useRef(Date.now()).current;
 
-  // Each persona has its own conversation. Opening this screen switches to it.
+  // Each persona has one conversation per mode. Opening this screen switches to it.
   useEffect(() => {
-    actions.openChat(persona.id);
-  }, [persona.id]);
+    actions.openChat(persona.id, mode);
+  }, [persona.id, mode]);
 
   // The list is inverted (newest at index 0), so the timeline is reversed.
   const items = useMemo(() => buildTimeline(messages).reverse(), [messages]);
@@ -99,6 +100,36 @@ export function ConversationScreen({ route, navigation }: Props) {
   const openKundli = useCallback(() => setKundliOpen(true), []);
   const hideToast = useCallback(() => setToast(null), []);
 
+  const onMessageAction = useCallback(
+    async (action: MessageAction, message: Message) => {
+      setMenu(null);
+      switch (action) {
+        case 'reply':
+          actions.setReplyingTo(toReplyRef(message, persona));
+          break;
+        case 'copy':
+          await Clipboard.setStringAsync(message.text);
+          setToast('Copied to clipboard');
+          break;
+        case 'retry':
+          actions.retryMessage(message.id);
+          break;
+        case 'delete':
+          actions.deleteMessage(message.id);
+          setToast('Message deleted');
+          break;
+      }
+    },
+    [persona],
+  );
+
+  const openMenu = useCallback((message: Message, anchor: MessageAnchor) => {
+    pressHaptic();
+    setMenu({ message, anchor });
+  }, []);
+
+  const selectedId = menu?.message.id;
+
   const renderItem = useCallback(
     ({ item, index }: ListRenderItemInfo<TimelineItem>) => {
       if (item.kind === 'day') {
@@ -112,10 +143,12 @@ export function ConversationScreen({ route, navigation }: Props) {
             startsGroup={item.startsGroup}
             endsGroup={item.endsGroup}
             isLatest={index === 0}
+            selected={item.message.id === selectedId}
             persona={persona}
             kundli={kundli}
             savedKundli={savedKundli}
-            onLongPress={setSelectedMessage}
+            onLongPress={openMenu}
+            onAction={onMessageAction}
             onRecommendationPress={setSelectedCard}
             onRate={actions.rate}
             onToggleReason={actions.toggleDislikeReason}
@@ -127,38 +160,29 @@ export function ConversationScreen({ route, navigation }: Props) {
         </Animated.View>
       );
     },
-    [openedAt, persona, kundli, savedKundli, send, shareKundli, openKundli],
+    [openedAt, persona, kundli, savedKundli, send, shareKundli, openKundli, onMessageAction, openMenu, selectedId],
   );
 
-  const onMessageAction = async (action: MessageAction, message: Message) => {
-    setSelectedMessage(null);
-    switch (action) {
-      case 'reply':
-        actions.setReplyingTo(toReplyRef(message, persona));
-        break;
-      case 'copy':
-        await Clipboard.setStringAsync(message.text);
-        setToast('Copied to clipboard');
-        break;
-      case 'retry':
-        actions.retryMessage(message.id);
-        break;
-      case 'delete':
-        actions.deleteMessage(message.id);
-        setToast('Message deleted');
-        break;
-    }
-  };
-
-  const onConfirmCard = (recommendation: Recommendation) => {
-    setSelectedCard(null);
-    setToast(`${getAppearance(recommendation.type).cta}: ${recommendation.title}`);
-  };
-
-  const changeMode = (next: Mode) => {
-    setShowJump(false);
-    actions.setMode(next);
-  };
+  // What a card's detail view can do: confirm with a toast, ask the astrologer, or book a call.
+  const cardActions: DetailActions = useMemo(
+    () => ({
+      close: () => setSelectedCard(null),
+      confirm: (message) => {
+        setSelectedCard(null);
+        setToast(message);
+      },
+      ask: (text) => {
+        setSelectedCard(null);
+        send(text);
+      },
+      book: (booking) => {
+        setSelectedCard(null);
+        actions.bookConsultation(booking);
+        scrollToLatest();
+      },
+    }),
+    [send],
+  );
 
   // In an inverted list, offset 0 is the newest message.
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -178,10 +202,9 @@ export function ConversationScreen({ route, navigation }: Props) {
         mode={mode}
         isOnline={isOnline}
         isTyping={isTyping}
-        chartOwner={kundli ? kundli.name.split(' ')[0] : null}
-        onBack={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Astrologers'))}
+        chartOwner={kundli ? firstName(kundli) : null}
+        onBack={() => goBackOrHome(navigation)}
         onProfilePress={() => navigation.navigate('Profile', { personaId: persona.id })}
-        onModeChange={changeMode}
         onMenuPress={() => setSettingsOpen(true)}
       />
 
@@ -238,8 +261,8 @@ export function ConversationScreen({ route, navigation }: Props) {
       />
       <Toast message={toast} onHide={hideToast} />
 
-      <MessageActionsSheet message={selectedMessage} onClose={() => setSelectedMessage(null)} onAction={onMessageAction} />
-      <RecommendationSheet recommendation={selectedCard} onClose={() => setSelectedCard(null)} onConfirm={onConfirmCard} />
+      <MessageMenu target={menu} onClose={() => setMenu(null)} onAction={onMessageAction} />
+      <RecommendationSheet recommendation={selectedCard} actions={cardActions} />
       <KundliSheet visible={kundliOpen} initial={kundli ?? savedKundli} onClose={() => setKundliOpen(false)} onAttach={shareKundli} />
       <SettingsSheet
         visible={settingsOpen}
@@ -288,8 +311,8 @@ const styles = StyleSheet.create({
   beginning: {
     marginVertical: 26,
     textAlign: 'center',
-    fontFamily: fonts.displayItalic,
-    fontSize: 17,
+    fontFamily: fonts.body,
+    fontSize: 12,
     color: colors.faint,
   },
   jump: {
@@ -303,9 +326,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.lineStrong,
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+    boxShadow: liftShadow,
   },
 });

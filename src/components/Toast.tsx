@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
-import { colors } from '../theme/colors';
+import { colors, liftShadow } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
 const VISIBLE_MS = 2200;
@@ -43,16 +43,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     pointerEvents: 'none',
-    bottom: 96,
+    bottom: 150,
     paddingHorizontal: 18,
     paddingVertical: 11,
-    borderRadius: 999,
-    backgroundColor: colors.paper,
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+    borderRadius: 10,
+    backgroundColor: colors.ink,
+    boxShadow: liftShadow,
   },
   text: {
     fontFamily: fonts.medium,
-    fontSize: 14,
-    color: colors.ink,
+    fontSize: 13,
+    color: colors.onAccent,
   },
 });

@@ -12,7 +12,6 @@ import Animated, {
 import type { Persona } from '../../domain/personas';
 import { colors } from '../../theme/colors';
 import { Avatar } from '../Avatar';
-import { AVATAR_GAP, AVATAR_SIZE } from '../layout';
 
 function Dot({ delay }: { delay: number }) {
   const lift = useSharedValue(0);
@@ -36,10 +35,8 @@ function Dot({ delay }: { delay: number }) {
 export function TypingIndicator({ persona }: { persona: Persona }) {
   return (
     <View style={styles.row} accessibilityLabel={`${persona.name} is typing`}>
-      <View style={styles.avatar}>
-        <Avatar source={persona.avatar} ring={persona.theme.accent} size={AVATAR_SIZE} />
-      </View>
-      <View style={styles.bubble}>
+      <Avatar source={persona.avatar} size={26} />
+      <View style={styles.dots}>
         <Dot delay={0} />
         <Dot delay={150} />
         <Dot delay={300} />
@@ -51,28 +48,20 @@ export function TypingIndicator({ persona }: { persona: Persona }) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginBottom: 22,
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 28,
   },
-  avatar: {
-    marginRight: AVATAR_GAP,
-  },
-  bubble: {
+  dots: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 22,
-    borderBottomLeftRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    paddingVertical: 8,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.muted,
   },
 });

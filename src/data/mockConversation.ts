@@ -4,27 +4,29 @@ const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 const now = Date.now();
 const ago = (ms: number) => now - ms;
+// The brief's session happened earlier today, before the simulated chat.
+const EARLIER = 5 * 60 * MINUTE;
 
-/** The conversation from the brief. Ids and text are unchanged; only timestamps are added. */
-export const mockConversation: Message[] = [
+/** The conversation from the brief. Text is unchanged; ids are prefixed and timestamps added. */
+const briefConversation: Message[] = [
   {
-    id: '1',
+    id: 'brief-1',
     type: 'system',
     text: 'Your session with AI Astrologer has started.',
-    createdAt: ago(14 * MINUTE),
+    createdAt: ago(EARLIER + 14 * MINUTE),
   },
   {
-    id: '2',
+    id: 'brief-2',
     type: 'user',
     text: 'Can you tell me about my career this year?',
-    createdAt: ago(13 * MINUTE),
+    createdAt: ago(EARLIER + 13 * MINUTE),
     status: 'sent',
   },
   {
-    id: '3',
+    id: 'brief-3',
     type: 'ai',
     text: 'I can already see a strong Saturn influence in your chart. Based on this, here are a few recommendations that may help you.',
-    createdAt: ago(12 * MINUTE),
+    createdAt: ago(EARLIER + 12 * MINUTE),
     recommendations: [
       {
         id: '1',
@@ -50,10 +52,10 @@ export const mockConversation: Message[] = [
     ],
   },
   {
-    id: '4',
+    id: 'brief-4',
     type: 'human',
     text: 'I also recommend focusing on your upcoming Jupiter transit.',
-    createdAt: ago(3 * MINUTE),
+    createdAt: ago(EARLIER + 3 * MINUTE),
   },
 ];
 
@@ -62,6 +64,7 @@ export const mockConversation: Message[] = [
  * user scrolls to the top, which is how pagination would work against an API.
  */
 export const olderPages: Message[][] = [
+  briefConversation,
   [
     {
       id: 'h2-1',
@@ -89,9 +92,10 @@ export const olderPages: Message[][] = [
       text: 'Your Moon sits in the 12th house, which governs rest. Full moons tend to stir it up. A short evening practice usually helps.',
       createdAt: ago(DAY + 37 * MINUTE),
       recommendations: [
-        // Not a registered type: renders through FallbackCard.
         { id: 'h2-r1', type: 'meditation', title: 'Moon Meditation', subtitle: '10 minutes before bed' },
-        { id: 'h2-r2', type: 'promotion', title: '20% off a sleep reading', subtitle: 'This week only' },
+        // Not in the catalog: renders through FallbackCard instead of crashing.
+        { id: 'h2-r2', type: 'journal', title: 'Dream Journal', subtitle: 'Note what wakes you' },
+        { id: 'h2-r3', type: 'promotion', title: '20% off a sleep reading', subtitle: 'This week only' },
       ],
       feedback: { rating: 'like' },
     },

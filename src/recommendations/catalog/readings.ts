@@ -1,0 +1,48 @@
+import { defineGroup } from './defineGroup';
+
+export const readings = defineGroup('readings', {
+  tarot: {
+    label: 'Tarot',
+    glyph: '✦',
+    tint: '#6B3F7A',
+    wash: '#F0E8F2',
+    cta: 'Draw cards',
+    image: require('../../../assets/images/tarot.jpg'),
+    blurb: 'A three-card spread read against your birth chart.',
+    hint: 'offer a spread for their question; when they accept, use the "tarot" widget for the actual reading',
+    ask: 'Please draw the cards for me.',
+  },
+  horoscope: {
+    label: 'Horoscope',
+    glyph: '☉',
+    tint: '#9A6A1F',
+    wash: '#F7EEDC',
+    cta: 'Read now',
+    image: require('../../../assets/images/horoscope.jpg'),
+    blurb: 'Your forecast, written for your sign.',
+    hint: 'a forecast for their sign for the week or month',
+    fields: '"why" holds the forecast itself in 2 sentences; facts like Lucky day, Lucky colour, Focus',
+  },
+  compatibility: {
+    label: 'Compatibility',
+    glyph: '♡',
+    tint: '#9B3F4F',
+    wash: '#F6E6E8',
+    cta: 'Match charts',
+    image: require('../../../assets/images/compatibility.jpg'),
+    blurb: 'Both charts side by side: guna milan, doshas and what to work on.',
+    hint: 'kundli matching with a partner, for love or marriage questions',
+    ask: "Let's match my chart with my partner's.",
+  },
+  consultation: {
+    label: 'Consultation',
+    glyph: '☾',
+    tint: '#3F6B46',
+    wash: '#EAF0E3',
+    cta: 'Book a call',
+    image: require('../../../assets/images/consultation.jpg'),
+    blurb: 'A private call with Acharya Meera, a verified Vedic astrologer. She reads this chat before you talk.',
+    hint: 'a call with the human astrologer for serious or complex questions, usually near the end',
+    fields: '"extra": {"focus": what the call is about, under 30 characters, "minutes": 15, 30 or 45}',
+  },
+});

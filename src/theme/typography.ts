@@ -1,31 +1,27 @@
-import {
-  CormorantGaramond_500Medium,
-  CormorantGaramond_500Medium_Italic,
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
-import {
-  HankenGrotesk_400Regular,
-  HankenGrotesk_500Medium,
-  HankenGrotesk_600SemiBold,
-} from '@expo-google-fonts/hanken-grotesk';
+import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond';
+import { Geist_400Regular, Geist_500Medium, Geist_600SemiBold } from '@expo-google-fonts/geist';
 
 /** Loaded once in App.tsx. Each weight is its own family, so styles never set fontWeight. */
 export const fontAssets = {
-  CormorantGaramond_500Medium,
-  CormorantGaramond_500Medium_Italic,
   CormorantGaramond_600SemiBold,
-  HankenGrotesk_400Regular,
-  HankenGrotesk_500Medium,
-  HankenGrotesk_600SemiBold,
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
 };
 
+/**
+ * Cormorant Garamond for headings, names and figures; Geist for everything functional,
+ * including chat text. Cormorant has a small x-height, so keep it at 20px and up.
+ */
 export const fonts = {
-  /** Cormorant: names, headings and the personas' own voice. Use at 18px and up. */
   display: 'CormorantGaramond_600SemiBold',
-  displayMedium: 'CormorantGaramond_500Medium',
-  displayItalic: 'CormorantGaramond_500Medium_Italic',
-  /** Hanken Grotesk: everything functional, including chat text. */
-  body: 'HankenGrotesk_400Regular',
-  medium: 'HankenGrotesk_500Medium',
-  semibold: 'HankenGrotesk_600SemiBold',
+  body: 'Geist_400Regular',
+  medium: 'Geist_500Medium',
+  semibold: 'Geist_600SemiBold',
 } as const;
+
+/** Large Geist text needs negative tracking to look set rather than typed. */
+export const tracking = (fontSize: number) => (fontSize >= 24 ? -0.035 * fontSize : fontSize >= 17 ? -0.2 : 0);
+
+/** Cormorant is already tightly fitted; only nudge it at large sizes. */
+export const displayTracking = (fontSize: number) => (fontSize >= 28 ? -0.01 * fontSize : 0);

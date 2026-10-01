@@ -19,9 +19,9 @@ type Props = {
 
 /** The classic North Indian diamond chart, drawn with a handful of SVG lines. */
 export function KundliChart({ size, firstSign, firstHousePlanets = [], tone = 'light' }: Props) {
-  // Both tones sit on dark surfaces now; 'dark' is the deeper inset inside the user's paper bubble.
-  const stroke = colors.accent;
-  const ink = tone === 'dark' ? colors.paper : colors.text;
+  // 'dark' is kept for callers that place the chart on an ink background.
+  const stroke = tone === 'dark' ? colors.background : colors.text;
+  const ink = tone === 'dark' ? colors.background : colors.muted;
   const s = size;
   const fontSize = Math.max(7, s * 0.075);
 

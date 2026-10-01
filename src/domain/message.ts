@@ -1,4 +1,5 @@
 import type { Kundli } from './kundli';
+import type { ChartAnalysis, Panchang, SessionSummary, TarotSpread } from './readings';
 import type { Recommendation } from './recommendation';
 
 type MessageBase = {
@@ -28,7 +29,11 @@ export type Attachment = { kind: 'kundli'; kundli: Kundli };
 // Interactive UI the astrologer can put under a reply, besides recommendation cards.
 export type ReplyWidget =
   | { kind: 'kundli_form' }
-  | { kind: 'quick_replies'; options: string[] };
+  | { kind: 'quick_replies'; options: string[] }
+  | { kind: 'analysis'; analysis: ChartAnalysis }
+  | { kind: 'tarot'; spread: TarotSpread }
+  | { kind: 'panchang'; panchang: Panchang }
+  | { kind: 'summary'; summary: SessionSummary };
 
 export type SystemMessage = MessageBase & { type: 'system' };
 export type UserMessage = MessageBase & {

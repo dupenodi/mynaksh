@@ -74,3 +74,7 @@ export function describeKundli(kundli: Kundli): string {
     .filter(Boolean)
     .join('\n');
 }
+
+export function firstName(kundli: Kundli): string {
+  return kundli.name.split(' ')[0];
+}

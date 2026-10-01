@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet } from 're
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '../theme/colors';
+import { colors, sheetShadow } from '../theme/colors';
 import { CONTENT_MAX_WIDTH } from './layout';
 
 type SheetProps = {
@@ -56,13 +56,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: colors.lineStrong,
-    boxShadow: '0 -12px 48px rgba(0, 0, 0, 0.45)',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    backgroundColor: colors.background,
+    boxShadow: sheetShadow,
   },
   handle: {
     alignSelf: 'center',
