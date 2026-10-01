@@ -7,9 +7,8 @@ import { colors } from '../../theme/colors';
 import { displayTracking, fonts } from '../../theme/typography';
 import { cardImage, type ResolvedExperience } from '../catalog';
 
-// Building blocks every detail view shares, so they all read as one family.
+// Shared detail-sheet pieces so every type reads as one family.
 
-/** Scrolls when the content is taller than most of the screen. */
 export function DetailScroll({ children }: { children: ReactNode }) {
   const { height } = useWindowDimensions();
   return (
@@ -49,7 +48,7 @@ export function DetailHeading({ recommendation, look }: { recommendation: Recomm
   );
 }
 
-/** The astrologer's reason, or the type's stock blurb when there is none. */
+/** Prefer the astrologer's reason; the type's blurb is the fallback when there is none. */
 export function DetailWhy({ recommendation, look }: { recommendation: Recommendation; look: ResolvedExperience }) {
   return <Text style={styles.why}>{recommendation.why ?? look.blurb}</Text>;
 }
@@ -61,7 +60,7 @@ export function FactList({ facts }: { facts?: Fact[] }) {
   return (
     <View style={styles.facts}>
       {facts.map((fact, index) => (
-        <View key={fact.label} style={[styles.fact, index < facts.length - 1 && styles.factDivider]}>
+        <View key={`${fact.label}-${index}`} style={[styles.fact, index < facts.length - 1 && styles.factDivider]}>
           <Text style={styles.factLabel}>{fact.label}</Text>
           <Text style={styles.factValue}>{fact.value}</Text>
         </View>
@@ -104,6 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // On web an Image without a width takes the file's own width.
   image: {
     ...StyleSheet.absoluteFill,
     width: '100%',

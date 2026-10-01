@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react-native';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { Recommendation } from '../domain/recommendation';
 import { colors } from '../theme/colors';
@@ -11,21 +11,15 @@ export const CARD_GAP = 10;
 
 export type RecommendationCardProps = {
   recommendation: Recommendation;
-  onPress: (recommendation: Recommendation) => void;
 };
 
-/** Artwork in an inset frame on top, the words underneath on white. */
-export function RecommendationCard({ recommendation, onPress }: RecommendationCardProps) {
+/** Inset art with a frosted type label; title and CTA sit on the cream body. Press lives on HScroll.Item. */
+export function RecommendationCard({ recommendation }: RecommendationCardProps) {
   const look = getExperience(recommendation.type);
   const image = cardImage(recommendation, look);
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${look.label}: ${recommendation.title}`}
-      onPress={() => onPress(recommendation)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-    >
+    <View style={styles.card}>
       <View style={[styles.art, { backgroundColor: look.wash }]}>
         {image ? (
           <Image source={image} style={styles.image} resizeMode="cover" />
@@ -52,14 +46,12 @@ export function RecommendationCard({ recommendation, onPress }: RecommendationCa
           <ArrowUpRight size={14} color={colors.faint} strokeWidth={1.75} />
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
-/** Same layout; getExperience gives unknown types a neutral look and no artwork. */
-export function FallbackCard(props: RecommendationCardProps) {
-  return <RecommendationCard {...props} />;
-}
+/** Unknown types use this same layout; getExperience supplies the fallback look. */
+export const FallbackCard = RecommendationCard;
 
 const styles = StyleSheet.create({
   card: {
@@ -71,10 +63,6 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.background,
   },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
-  },
   art: {
     height: 120,
     borderRadius: 11,
@@ -82,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Explicit size: on web an Image without a width takes the file's own width.
+  // On web an Image without a width takes the file's own width.
   image: {
     ...StyleSheet.absoluteFill,
     width: '100%',

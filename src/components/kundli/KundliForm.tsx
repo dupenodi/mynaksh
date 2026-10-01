@@ -1,15 +1,19 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View, type TextStyle } from 'react-native';
 
+import { HScroll } from '../HScroll';
 import { Toggle } from '../Toggle';
-import { sunSign, type Kundli } from '../../domain/kundli';
+import { sunSign, type Kundli, type Rashi } from '../../domain/kundli';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
-import { fromClock, fromIso, isFuture, toClock, toIso } from './birthInput';
-import { DateWheels, TimeWheels, UnknownTime, daysInMonth } from './BirthWheels';
+import { BirthWhen } from './BirthWhen';
+import { dateProblem, validDate, validTime } from './birthInput';
 import { KundliChart } from './KundliChart';
 
 const CITIES = ['Bengaluru', 'Mumbai', 'New Delhi', 'Hyderabad', 'Chennai', 'Kolkata'];
+
+const webOutline: TextStyle | null =
+  Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as unknown as TextStyle) : null;
 
 type Props = {
   initial: Kundli | null;
@@ -18,38 +22,76 @@ type Props = {
   header?: ReactNode;
 };
 
-/** Birth details form. Used in the bottom sheet and inline in the chat. */
-export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
-  const savedDate = fromIso(initial?.dateOfBirth);
-  const savedTime = fromClock(initial?.timeOfBirth);
+function useKundliDraft(initial: Kundli | null) {
   const [name, setName] = useState(initial?.name ?? '');
-  const [day, setDay] = useState(savedDate.day);
-  const [month, setMonth] = useState(savedDate.month);
-  const [year, setYear] = useState(savedDate.year);
-  const [hour, setHour] = useState(savedTime.hour);
-  const [minute, setMinute] = useState(savedTime.minute);
+  const [date, setDate] = useState(initial?.dateOfBirth ?? '');
+  const [time, setTime] = useState(initial?.timeOfBirth ?? '');
   const [timeUnknown, setTimeUnknown] = useState(initial ? !initial.timeOfBirth : false);
   const [place, setPlace] = useState(initial?.placeOfBirth ?? '');
 
-  // Switching to a shorter month (31 Jan → Feb) pulls the day back to the month's last day.
-  const maxDay = daysInMonth(month, year);
-  useEffect(() => {
-    if (day !== null && day > maxDay) {
-      setDay(maxDay);
-    }
-  }, [day, maxDay]);
-
-  const dateOfBirth = toIso(day, month, year);
-  const timeValid = timeUnknown || (hour !== null && minute !== null);
-  const valid = name.trim().length > 1 && dateOfBirth !== null && timeValid && place.trim().length > 1;
+  const dateOfBirth = validDate(date);
+  const timeOfBirth = validTime(time);
+  const valid =
+    name.trim().length > 1 && dateOfBirth !== null && (timeUnknown || timeOfBirth !== null) && place.trim().length > 1;
   const sign = dateOfBirth ? sunSign(dateOfBirth) : null;
+
+  return {
+    name,
+    setName,
+    date,
+    setDate,
+    time,
+    setTime,
+    timeUnknown,
+    setTimeUnknown,
+    place,
+    setPlace,
+    dateOfBirth,
+    timeOfBirth,
+    valid,
+    sign,
+  };
+}
+
+function signLine(sign: Rashi | null, date: string): string {
+  if (sign) {
+    return `Sun in ${sign.name} (${sign.english})`;
+  }
+  const problem = dateProblem(date);
+  if (problem === 'future') {
+    return 'That date hasn’t happened yet';
+  }
+  if (problem === 'invalid') {
+    return 'That date doesn’t exist';
+  }
+  return 'Your chart takes shape as you choose';
+}
+
+/** Birth details form. Used in the bottom sheet and inline in the chat. */
+export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
+  const {
+    name,
+    setName,
+    date,
+    setDate,
+    time,
+    setTime,
+    timeUnknown,
+    setTimeUnknown,
+    place,
+    setPlace,
+    dateOfBirth,
+    timeOfBirth,
+    valid,
+    sign,
+  } = useKundliDraft(initial);
 
   const submit = () => {
     if (valid && dateOfBirth) {
       onSubmit({
         name: name.trim(),
         dateOfBirth,
-        timeOfBirth: timeUnknown || hour === null || minute === null ? undefined : toClock(hour, minute),
+        timeOfBirth: timeUnknown || !timeOfBirth ? undefined : timeOfBirth,
         placeOfBirth: place.trim(),
       });
     }
@@ -60,13 +102,7 @@ export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
       <View style={styles.header}>
         <View style={styles.headerText}>
           {header}
-          <Text style={[styles.signLine, !sign && styles.signPending]}>
-            {sign
-              ? `Sun in ${sign.name} (${sign.english})`
-              : isFuture(day, month, year)
-                ? 'That date hasn’t happened yet'
-                : 'Your chart takes shape as you choose'}
-          </Text>
+          <Text style={[styles.signLine, !sign && styles.signPending]}>{signLine(sign, date)}</Text>
         </View>
         <View style={styles.preview}>
           <KundliChart size={72} firstSign={sign?.number ?? null} firstHousePlanets={sign ? ['Su'] : []} />
@@ -79,29 +115,12 @@ export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
           onChangeText={setName}
           placeholder="As on your birth certificate"
           placeholderTextColor={colors.faint}
-          style={styles.input}
+          style={[styles.input, webOutline]}
           autoCapitalize="words"
         />
       </Field>
 
-      <Field label="Date of birth">
-        <DateWheels
-          day={day !== null && day > maxDay ? maxDay : day}
-          month={month}
-          year={year}
-          onDay={setDay}
-          onMonth={setMonth}
-          onYear={setYear}
-        />
-      </Field>
-
-      <Field label="Time of birth">
-        {timeUnknown ? (
-          <UnknownTime />
-        ) : (
-          <TimeWheels hour={hour} minute={minute} onHour={setHour} onMinute={setMinute} />
-        )}
-      </Field>
+      <BirthWhen date={date} time={time} timeUnknown={timeUnknown} onDate={setDate} onTime={setTime} />
 
       <View style={styles.toggle}>
         <Text style={styles.toggleText}>I don’t know my birth time</Text>
@@ -114,22 +133,11 @@ export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
           onChangeText={setPlace}
           placeholder="City, state"
           placeholderTextColor={colors.faint}
-          style={styles.input}
+          style={[styles.input, webOutline]}
           autoCapitalize="words"
         />
       </Field>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cities}>
-        {CITIES.map((city) => (
-          <Pressable
-            key={city}
-            onPress={() => setPlace(city)}
-            accessibilityRole="button"
-            style={[styles.city, place === city && styles.citySelected]}
-          >
-            <Text style={[styles.cityText, place === city && styles.cityTextSelected]}>{city}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <CityShortcuts place={place} onSelect={setPlace} />
 
       <Pressable
         onPress={submit}
@@ -145,12 +153,29 @@ export function KundliForm({ initial, submitLabel, onSubmit, header }: Props) {
   );
 }
 
-function Field({ label, children, grow }: { label: string; children: ReactNode; grow?: boolean }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <View style={[styles.field, grow && styles.grow]}>
+    <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       {children}
     </View>
+  );
+}
+
+function CityShortcuts({ place, onSelect }: { place: string; onSelect: (city: string) => void }) {
+  return (
+    <HScroll contentContainerStyle={styles.cities}>
+      {CITIES.map((city) => (
+        <HScroll.Item
+          key={city}
+          onPress={() => onSelect(city)}
+          accessibilityLabel={city}
+          style={[styles.city, place === city && styles.citySelected]}
+        >
+          <Text style={[styles.cityText, place === city && styles.cityTextSelected]}>{city}</Text>
+        </HScroll.Item>
+      ))}
+    </HScroll>
   );
 }
 
@@ -182,9 +207,6 @@ const styles = StyleSheet.create({
   },
   field: {
     marginTop: 16,
-  },
-  grow: {
-    flex: 1,
   },
   label: {
     marginBottom: 7,

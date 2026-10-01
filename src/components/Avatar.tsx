@@ -10,6 +10,7 @@ type AvatarProps = {
 };
 
 export function Avatar({ source, size, ring = colors.lineStrong, online }: AvatarProps) {
+  const inner = size - 4;
   const dot = Math.max(8, Math.round(size * 0.24));
 
   return (
@@ -17,7 +18,7 @@ export function Avatar({ source, size, ring = colors.lineStrong, online }: Avata
       <View style={[styles.ring, { borderRadius: size / 2, borderColor: ring }]}>
         <Image
           source={source}
-          style={{ width: size - 4, height: size - 4, borderRadius: (size - 4) / 2 }}
+          style={{ width: inner, height: inner, borderRadius: inner / 2 }}
           accessibilityIgnoresInvertColors
         />
       </View>
@@ -25,7 +26,12 @@ export function Avatar({ source, size, ring = colors.lineStrong, online }: Avata
         <View
           style={[
             styles.dot,
-            { width: dot, height: dot, borderRadius: dot / 2, backgroundColor: online ? colors.online : colors.faint },
+            {
+              width: dot,
+              height: dot,
+              borderRadius: dot / 2,
+              backgroundColor: online ? colors.online : colors.faint,
+            },
           ]}
         />
       ) : null}

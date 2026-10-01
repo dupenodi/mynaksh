@@ -12,6 +12,7 @@ import Animated, {
 import type { Persona } from '../../domain/personas';
 import { colors } from '../../theme/colors';
 import { Avatar } from '../Avatar';
+import { ADVISOR_GROUP_END } from './spacing';
 
 function Dot({ delay }: { delay: number }) {
   const lift = useSharedValue(0);
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 28,
+    marginBottom: ADVISOR_GROUP_END,
   },
   dots: {
     flexDirection: 'row',

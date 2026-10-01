@@ -52,3 +52,16 @@ export type AiMessage = MessageBase & {
 };
 
 export type Message = SystemMessage | UserMessage | HumanMessage | AiMessage;
+
+const DEFAULT_AUTHORS: Record<Message['type'], string> = {
+  user: 'You',
+  system: 'MyNaksh',
+  ai: 'Astrologer',
+  human: 'Astrologer',
+};
+
+/** Snapshot used by the composer preview and quoted bubbles. */
+export function toReplyRef(message: Message, authors?: Partial<Record<Message['type'], string>>): ReplyRef {
+  const names = { ...DEFAULT_AUTHORS, ...authors };
+  return { id: message.id, author: names[message.type], text: message.text };
+}

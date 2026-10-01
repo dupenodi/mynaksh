@@ -1,7 +1,6 @@
 import { ArrowUp, Plus, X } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Keyboard,
   Platform,
   StyleSheet,
   Text,
@@ -9,15 +8,17 @@ import {
   View,
   type NativeSyntheticEvent,
   type TextInputKeyPressEventData,
+  type TextStyle,
 } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ReplyRef } from '../domain/message';
+import { useKeyboardOpen } from '../lib/useKeyboardOpen';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { IconButton } from './Button';
-import { CONTENT_MAX_WIDTH } from './layout';
+import { COMPOSER_KEYBOARD_PAD, CONTENT_MAX_WIDTH } from './layout';
 
 type ComposerProps = {
   onSend: (text: string) => void;
@@ -35,6 +36,10 @@ const MIN_INPUT = LINE_HEIGHT;
 const MAX_INPUT = LINE_HEIGHT * 6;
 
 const clampHeight = (height: number) => Math.min(MAX_INPUT, Math.max(MIN_INPUT, height));
+
+// RN's outlineStyle type omits "none". The browser focus ring is the blue box.
+const webInput: TextStyle | null =
+  Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as unknown as TextStyle) : null;
 
 /** One row: attach, a text field that grows up to six lines, send. */
 export function Composer({
@@ -78,21 +83,11 @@ export function Composer({
   };
 
   return (
-    <View style={[styles.bar, { paddingBottom: keyboardOpen ? 8 : Math.max(insets.bottom, 8) }]}>
+    <View
+      style={[styles.bar, { paddingBottom: keyboardOpen ? COMPOSER_KEYBOARD_PAD : Math.max(insets.bottom, COMPOSER_KEYBOARD_PAD) }]}
+    >
       <View style={styles.column}>
-        {replyingTo ? (
-          <Animated.View entering={FadeInDown.duration(200)} exiting={FadeOutDown.duration(150)} style={styles.reply}>
-            <View style={styles.replyBody}>
-              <Text style={styles.replyLabel}>Replying to {replyingTo.author}</Text>
-              <Text style={styles.replyText} numberOfLines={1}>
-                {replyingTo.text}
-              </Text>
-            </View>
-            <IconButton onPress={onCancelReply} accessibilityLabel="Cancel reply" size={28}>
-              <X size={14} color={colors.muted} strokeWidth={2} />
-            </IconButton>
-          </Animated.View>
-        ) : null}
+        {replyingTo ? <ReplyPreview reply={replyingTo} onCancel={onCancelReply} /> : null}
 
         <View style={styles.row}>
           <View>
@@ -116,7 +111,7 @@ export function Composer({
               multiline
               placeholder={placeholder}
               placeholderTextColor={colors.faint}
-              style={[styles.input, { height: inputHeight }]}
+              style={[styles.input, webInput, { height: inputHeight }]}
               scrollEnabled={inputHeight >= MAX_INPUT}
               accessibilityLabel="Message"
             />
@@ -134,6 +129,22 @@ export function Composer({
         </View>
       </View>
     </View>
+  );
+}
+
+function ReplyPreview({ reply, onCancel }: { reply: ReplyRef; onCancel: () => void }) {
+  return (
+    <Animated.View entering={FadeInDown.duration(200)} exiting={FadeOutDown.duration(150)} style={styles.reply}>
+      <View style={styles.replyBody}>
+        <Text style={styles.replyLabel}>Replying to {reply.author}</Text>
+        <Text style={styles.replyText} numberOfLines={1}>
+          {reply.text}
+        </Text>
+      </View>
+      <IconButton onPress={onCancel} accessibilityLabel="Cancel reply" size={28}>
+        <X size={14} color={colors.muted} strokeWidth={2} />
+      </IconButton>
+    </Animated.View>
   );
 }
 
@@ -211,23 +222,3 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
   },
 });
-
-/**
- * A docked keyboard covers the home-indicator / gesture-bar inset, so the bar drops it while
- * typing. Floating keyboards also fire these events but cover nothing, hence the height check.
- */
-function useKeyboardOpen() {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const ios = Platform.OS === 'ios';
-    const show = Keyboard.addListener(ios ? 'keyboardWillShow' : 'keyboardDidShow', (event) =>
-      setOpen(event.endCoordinates.height > 150),
-    );
-    const hide = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', () => setOpen(false));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-  return open;
-}

@@ -38,7 +38,7 @@ export function StepsDetail({ recommendation, look, actions }: DetailProps) {
             const done = ticked.has(index);
             return (
               <Pressable
-                key={step}
+                key={`${index}-${step}`}
                 onPress={() => toggle(index)}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: done }}

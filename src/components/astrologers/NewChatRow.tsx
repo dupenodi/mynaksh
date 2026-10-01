@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 
-/** The row that starts a fresh live conversation. Sized like a chat row, so the list stays even. */
+/** Sized like a chat row so the list stays even. */
 export function NewChatRow({ onPress }: { onPress: () => void }) {
   return (
     <Pressable

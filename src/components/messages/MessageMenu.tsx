@@ -42,7 +42,7 @@ type Props = {
 
 /** A small popover pinned to the pressed message, on the same side the message sits. */
 export function MessageMenu({ target, onClose, onAction }: Props) {
-  const window = useWindowDimensions();
+  const viewport = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   if (!target) {
@@ -52,18 +52,12 @@ export function MessageMenu({ target, onClose, onAction }: Props) {
   const { message, anchor } = target;
   const items = menuItems(message);
   const height = items.length * ITEM_HEIGHT + 8;
-  const top = placeVertically(anchor, height, insets.top + EDGE, window.height - insets.bottom - EDGE);
+  const top = placeVertically(anchor, height, insets.top + EDGE, viewport.height - insets.bottom - EDGE);
   const below = top >= anchor.y + anchor.height;
   const mine = message.type === 'user';
   const left = mine
-    ? Math.min(anchor.x + anchor.width - MENU_WIDTH, window.width - MENU_WIDTH - EDGE)
+    ? Math.min(anchor.x + anchor.width - MENU_WIDTH, viewport.width - MENU_WIDTH - EDGE)
     : Math.max(anchor.x, EDGE);
-
-  // Grow out of the corner nearest the message, the way native context menus do.
-  const entering = new Keyframe({
-    0: { opacity: 0, transform: [{ translateY: below ? -6 : 6 }, { scale: 0.94 }] },
-    100: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }], easing: Easing.out(Easing.cubic) },
-  }).duration(160);
 
   return (
     <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>
@@ -72,7 +66,7 @@ export function MessageMenu({ target, onClose, onAction }: Props) {
       </Pressable>
 
       <Animated.View
-        entering={entering}
+        entering={menuEntering(below)}
         style={[styles.menu, { top, left: Math.max(left, EDGE), width: MENU_WIDTH }]}
         accessibilityRole="menu"
       >
@@ -90,6 +84,13 @@ export function MessageMenu({ target, onClose, onAction }: Props) {
       </Animated.View>
     </Modal>
   );
+}
+
+function menuEntering(below: boolean) {
+  return new Keyframe({
+    0: { opacity: 0, transform: [{ translateY: below ? -6 : 6 }, { scale: 0.94 }] },
+    100: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }], easing: Easing.out(Easing.cubic) },
+  }).duration(160);
 }
 
 /**

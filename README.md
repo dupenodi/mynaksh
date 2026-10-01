@@ -54,8 +54,8 @@ Every simulated chat opens with the brief's mock payload (`data/mockConversation
 
 ```text
 src/
-  screens/          astrologer list, profile, chat
-  components/       composer, header, sheets, states; messages/ holds every message type
+  screens/          astrologer list, profile, chat (shell + useConversationScreen)
+  components/       composer, header, list, sheets, states; messages/ holds every message type
   recommendations/  catalog of types, type → card registry, card rail, per-type detail sheets
   widgets/          inline reply widgets (tarot, panchang, form…) with their own registry
   state/            Zustand store and the timeline builder
@@ -69,12 +69,12 @@ web/               webpack config and entry for the optional web build
 ## Component architecture
 
 ```text
-ConversationScreen           reads the store, owns UI-only state (open sheet, toast)
+ConversationScreen           layout only; useConversationScreen owns store + overlays
 ├── ConversationHeader
 ├── LoadingSkeleton | LoadError | EmptyState
-├── FlatList (inverted)
+├── ConversationList (inverted)
 │   ├── DaySeparator
-│   └── MessageRow (memo)    switches on message.type
+│   └── MessageRow (memo)    message + layout + actions
 │       ├── SystemNote
 │       ├── UserBubble       reply quote, delivery state, Retry
 │       └── AdvisorMessage   AI and human astrologer
@@ -85,7 +85,7 @@ ConversationScreen           reads the store, owns UI-only state (open sheet, to
 └── MessageMenu, sheets
 ```
 
-Rows are presentational: they get a message and callbacks and never touch the store. Every bottom sheet is built on one `Sheet` primitive.
+Rows are presentational: they get a message, layout flags, and an `actions` object, and never touch the store. Every bottom sheet is built on one `Sheet` primitive.
 
 ## State management
 

@@ -18,15 +18,17 @@ type Props = {
   onClear: () => void;
 };
 
+function sessionCaption(mode: Mode): string {
+  return mode === 'demo'
+    ? 'Demo mode plays a scripted conversation. No API key needed.'
+    : 'Live mode sends your messages to the model through the chat proxy.';
+}
+
 export function SettingsSheet({ visible, mode, isOnline, onClose, onToggleOnline, onReload, onClear }: Props) {
   return (
     <Sheet visible={visible} onClose={onClose}>
       <Text style={styles.title}>Session</Text>
-      <Text style={styles.caption}>
-        {mode === 'demo'
-          ? 'Demo mode plays a scripted conversation. No API key needed.'
-          : 'Live mode sends your messages to the model through the chat proxy.'}
-      </Text>
+      <Text style={styles.caption}>{sessionCaption(mode)}</Text>
 
       <View style={styles.group}>
         <View style={styles.row}>

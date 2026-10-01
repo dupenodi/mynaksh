@@ -44,8 +44,8 @@ export function PanchangWidget({ widget }: WidgetProps<'panchang'>) {
       ) : null}
 
       <View style={styles.windows}>
-        {goodHours.map((hours) => (
-          <View key={hours} style={[styles.window, styles.good]}>
+        {goodHours.map((hours, index) => (
+          <View key={`${hours}-${index}`} style={[styles.window, styles.good]}>
             <Text style={[styles.windowLabel, { color: colors.positive }]}>Good hours</Text>
             <Text style={styles.windowTime}>{hours}</Text>
           </View>

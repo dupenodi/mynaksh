@@ -32,7 +32,7 @@ export function TarotWidget({ widget }: WidgetProps<'tarot'>) {
       ) : null}
       {cards.map((card, index) =>
         revealed.has(index) ? (
-          <View key={`${card.name}-meaning`} style={styles.reading}>
+          <View key={`${card.name}-${index}-meaning`} style={styles.reading}>
             <Text style={styles.position}>
               {card.position ? `${card.position} · ` : ''}
               {card.name}

@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Bell, Search } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,9 +10,10 @@ import { NewChatRow } from '../components/astrologers/NewChatRow';
 import { LabelledDivider, SectionHeader } from '../components/astrologers/SectionHeader';
 import { TabBar } from '../components/astrologers/TabBar';
 import { BrandLogo } from '../components/BrandLogo';
-import { PAGE_MAX_WIDTH } from '../components/layout';
+import { PAGE_MAX_WIDTH, PRESSED_OPACITY } from '../components/layout';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { PersonaPickerSheet } from '../components/sheets/PersonaPickerSheet';
-import { Toast } from '../components/Toast';
+import { Toast, useToast } from '../components/Toast';
 import { personaList, type PersonaId } from '../domain/personas';
 import type { RootStackParamList } from '../navigation/types';
 import { useConversationStore } from '../state/conversationStore';
@@ -21,38 +22,32 @@ import { fonts } from '../theme/typography';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Astrologers'>;
 
-const SOON = 'Coming soon';
-
-// Store actions never change, so they are read once instead of subscribed to.
-const actions = useConversationStore.getState();
-
 export function AstrologersScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const [toast, setToast] = useState<string | null>(null);
-  const hideToast = useCallback(() => setToast(null), []);
-  const soon = () => setToast(SOON);
+  const toast = useToast();
+  const showComingSoon = () => toast.show('Coming soon');
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const startLiveChat = (personaId: PersonaId) => {
     setPickerOpen(false);
-    actions.startFreshChat(personaId);
+    useConversationStore.getState().startFreshChat(personaId);
     navigation.navigate('Chat', { personaId, mode: 'live' });
   };
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.topBarInner}>
+      <ScreenHeader>
+        <View style={styles.headerInner}>
           <BrandLogo />
-          <BadgeIconButton icon={Bell} label="Notifications" onPress={soon} badge />
+          <BadgeIconButton icon={Bell} label="Notifications" onPress={showComingSoon} badge />
         </View>
-      </View>
+      </ScreenHeader>
 
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable
-          onPress={soon}
+          onPress={showComingSoon}
           accessibilityRole="search"
-          style={({ pressed }) => [styles.search, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.search, pressed && styles.searchPressed]}
         >
           <Search size={17} color={colors.faint} strokeWidth={1.75} />
           <Text style={styles.searchText}>Search astrologers</Text>
@@ -87,8 +82,8 @@ export function AstrologersScreen({ navigation }: Props) {
         </Text>
       </ScrollView>
 
-      <TabBar bottomInset={insets.bottom} onDummyTab={soon} />
-      <Toast message={toast} onHide={hideToast} />
+      <TabBar bottomInset={insets.bottom} onDummyTab={showComingSoon} />
+      <Toast message={toast.message} onHide={toast.hide} />
       <PersonaPickerSheet visible={pickerOpen} onClose={() => setPickerOpen(false)} onPick={startLiveChat} />
     </View>
   );
@@ -99,20 +94,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  topBarInner: {
-    width: '100%',
-    maxWidth: PAGE_MAX_WIDTH,
-    alignSelf: 'center',
+  headerInner: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  pressed: {
-    opacity: 0.6,
+  searchPressed: {
+    opacity: PRESSED_OPACITY,
   },
   content: {
     width: '100%',

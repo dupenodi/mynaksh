@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
+import { PRESSED_OPACITY } from '../layout';
 
 type Tab = { label: string; icon: LucideIcon };
 
@@ -14,6 +15,8 @@ const TABS: Tab[] = [
   { label: 'Profile', icon: User },
 ];
 
+const CHATS_TAB_INDEX = 0;
+
 type Props = {
   bottomInset: number;
   /** Every tab but Chats is a placeholder for now. */
@@ -24,7 +27,7 @@ export function TabBar({ bottomInset, onDummyTab }: Props) {
   return (
     <View style={[styles.tabBar, { paddingBottom: Math.max(bottomInset, 8) }]} accessibilityRole="tablist">
       {TABS.map(({ label, icon: Icon }, index) => {
-        const active = index === 0;
+        const active = index === CHATS_TAB_INDEX;
         return (
           <Pressable
             key={label}
@@ -57,7 +60,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   pressed: {
-    opacity: 0.6,
+    opacity: PRESSED_OPACITY,
   },
   tabLabel: {
     fontFamily: fonts.medium,

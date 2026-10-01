@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Mode } from '../../data/replies';
+import type { Message } from '../../domain/message';
 import type { Persona } from '../../domain/personas';
 import { useLastMessage } from '../../state/selectors';
 import { shortTimeLabel } from '../../state/timeline';
@@ -12,18 +13,22 @@ type Props = {
   persona: Persona;
   mode: Mode;
   onPress: () => void;
-  /** Render nothing until this conversation has a message (used for live chats in progress). */
+  /** Live rows hide until the conversation has a message. */
   hideWhenEmpty?: boolean;
 };
 
-/** One conversation in the home list: avatar, name, last message and time. */
+function previewText(last: Message | undefined, greeting: string): string {
+  if (!last) {
+    return greeting;
+  }
+  return `${last.type === 'user' ? 'You: ' : ''}${last.text}`;
+}
+
 export function ChatRow({ persona, mode, onPress, hideWhenEmpty = false }: Props) {
   const last = useLastMessage(persona.id, mode);
   if (hideWhenEmpty && !last) {
     return null;
   }
-  // No conversation yet: show the persona's opening line as an unread greeting.
-  const preview = last ? `${last.type === 'user' ? 'You: ' : ''}${last.text}` : persona.quote;
 
   return (
     <Pressable
@@ -43,7 +48,7 @@ export function ChatRow({ persona, mode, onPress, hideWhenEmpty = false }: Props
         </View>
         <View style={styles.line}>
           <Text style={[styles.preview, !last && styles.previewUnread]} numberOfLines={1}>
-            {preview}
+            {previewText(last, persona.quote)}
           </Text>
           {!last ? (
             <View style={styles.unread}>

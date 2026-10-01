@@ -3,9 +3,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { KundliForm } from '../../components/kundli/KundliForm';
 import { formatBirthDate, type Kundli } from '../../domain/kundli';
-import { cardShadow, colors } from '../../theme/colors';
+import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import type { WidgetProps } from '../types';
+import { surfaceCard } from './WidgetCard';
 
 /** The inline form until a kundli is shared, then a one-line receipt with Edit. */
 export function KundliFormWidget({ context }: WidgetProps<'kundli_form'>) {
@@ -42,15 +43,9 @@ function SharedKundli({ kundli, onEdit }: { kundli: Kundli; onEdit: () => void }
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
+    ...surfaceCard,
     maxWidth: 420,
     marginTop: 10,
-    padding: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.background,
-    boxShadow: cardShadow,
   },
   title: {
     fontFamily: fonts.semibold,

@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
 import { colors, liftShadow } from '../theme/colors';
 import { fonts } from '../theme/typography';
+import { TOAST_ABOVE_COMPOSER } from './layout';
 
 const VISIBLE_MS = 2200;
 
@@ -11,6 +12,14 @@ type ToastProps = {
   message: string | null;
   onHide: () => void;
 };
+
+/** Local toast state for screens that show a short confirmation. */
+export function useToast() {
+  const [message, setMessage] = useState<string | null>(null);
+  const hide = useCallback(() => setMessage(null), []);
+  const show = useCallback((next: string) => setMessage(next), []);
+  return { message, show, hide };
+}
 
 export function Toast({ message, onHide }: ToastProps) {
   useEffect(() => {
@@ -43,7 +52,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     pointerEvents: 'none',
-    bottom: 150,
+    bottom: TOAST_ABOVE_COMPOSER,
     paddingHorizontal: 18,
     paddingVertical: 11,
     borderRadius: 10,

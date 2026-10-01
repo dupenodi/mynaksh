@@ -5,9 +5,11 @@ import { toChatTurns, toHumanTurns } from './prompt';
 import type { ReplySource } from './protocol';
 import { createSseReader } from './sse';
 
-// The proxy in server/proxy.mjs. The Android emulator reaches the host machine at 10.0.2.2;
-// on a physical phone, use the computer's LAN address. The web build calls its own domain.
-const API_URL = Platform.select({ android: 'http://10.0.2.2:8787', web: '', default: 'http://localhost:8787' });
+// In development, the proxy in server/proxy.mjs (the Android emulator reaches the host at 10.0.2.2).
+// Release builds use the hosted endpoint; the web build calls its own domain.
+const HOSTED_URL = 'https://mynaksh-umber.vercel.app';
+const DEV_URL = Platform.select({ android: 'http://10.0.2.2:8787', default: 'http://localhost:8787' });
+const API_URL = Platform.OS === 'web' ? '' : __DEV__ ? DEV_URL : HOSTED_URL;
 
 /**
  * Streams the reply from the chat proxy. React Native's fetch has no readable body, but XHR

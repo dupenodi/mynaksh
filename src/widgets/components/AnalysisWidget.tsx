@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import type { Fact } from '../../domain/recommendation';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import type { WidgetProps } from '../types';
@@ -11,19 +12,7 @@ export function AnalysisWidget({ widget }: WidgetProps<'analysis'>) {
 
   return (
     <WidgetCard eyebrow="Your chart at a glance" title={headline}>
-      {placements.length > 0 ? (
-        <View style={styles.grid}>
-          {placements.map((placement) => (
-            <View key={placement.label} style={styles.cell}>
-              <Text style={styles.label}>{placement.label}</Text>
-              <Text style={styles.value} numberOfLines={2}>
-                {placement.value}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
-
+      <PlacementGrid placements={placements} />
       {strengths.length > 0 ? (
         <>
           <WidgetSection>Working for you</WidgetSection>
@@ -40,26 +29,45 @@ export function AnalysisWidget({ widget }: WidgetProps<'analysis'>) {
   );
 }
 
+/** Two-column cells. Not FactList: that is a single stacked column with side-by-side label/value. */
+function PlacementGrid({ placements }: { placements: Fact[] }) {
+  if (placements.length === 0) {
+    return null;
+  }
+  return (
+    <View style={styles.placementGrid}>
+      {placements.map((placement, index) => (
+        <View key={`${placement.label}-${index}`} style={styles.placement}>
+          <Text style={styles.placementLabel}>{placement.label}</Text>
+          <Text style={styles.placementValue} numberOfLines={2}>
+            {placement.value}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  grid: {
+  placementGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 14,
   },
-  cell: {
+  placement: {
     flexGrow: 1,
     flexBasis: '45%',
     padding: 12,
     borderRadius: 12,
     backgroundColor: colors.surface,
   },
-  label: {
+  placementLabel: {
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.muted,
   },
-  value: {
+  placementValue: {
     marginTop: 3,
     fontFamily: fonts.semibold,
     fontSize: 15,

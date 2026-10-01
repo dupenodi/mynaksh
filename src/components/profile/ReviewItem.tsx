@@ -5,13 +5,15 @@ import type { Review } from '../../domain/personas';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 
+const STAR_COUNT = 5;
+
 export function ReviewItem({ review, last }: { review: Review; last: boolean }) {
   return (
     <View style={[styles.review, !last && styles.divider]}>
       <View style={styles.reviewTop}>
         <Text style={styles.reviewAuthor}>{review.author}</Text>
         <View style={styles.reviewStars} accessibilityLabel={`${review.rating} out of 5`}>
-          {Array.from({ length: 5 }, (_, i) => (
+          {Array.from({ length: STAR_COUNT }, (_, i) => (
             <Star
               key={i}
               size={11}

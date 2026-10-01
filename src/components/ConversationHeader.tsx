@@ -9,7 +9,7 @@ import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { Avatar } from './Avatar';
 import { IconButton } from './Button';
-import { CONTENT_MAX_WIDTH } from './layout';
+import { CONTENT_MAX_WIDTH, SAFE_TOP_EXTRA } from './layout';
 
 type Props = {
   persona: Persona;
@@ -25,17 +25,10 @@ type Props = {
 export function ConversationHeader(props: Props) {
   const { persona, mode, isOnline, isTyping, chartOwner } = props;
   const insets = useSafeAreaInsets();
-
-  const status = !isOnline
-    ? 'Offline'
-    : isTyping
-      ? 'Typing…'
-      : chartOwner
-        ? `Reading ${chartOwner}’s chart`
-        : 'AI astrologer, online';
+  const status = conversationStatus({ isOnline, isTyping, chartOwner });
 
   return (
-    <View style={[styles.bar, { paddingTop: insets.top + 10 }]}>
+    <View style={[styles.bar, { paddingTop: insets.top + SAFE_TOP_EXTRA }]}>
       <View style={styles.inner}>
         <IconButton onPress={props.onBack} accessibilityLabel="All astrologers" tone="clear" size={32}>
           <ChevronLeft size={20} color={colors.text} strokeWidth={1.75} />
@@ -77,6 +70,23 @@ export function ConversationHeader(props: Props) {
       ) : null}
     </View>
   );
+}
+
+function conversationStatus({
+  isOnline,
+  isTyping,
+  chartOwner,
+}: Pick<Props, 'isOnline' | 'isTyping' | 'chartOwner'>): string {
+  if (!isOnline) {
+    return 'Offline';
+  }
+  if (isTyping) {
+    return 'Typing…';
+  }
+  if (chartOwner) {
+    return `Reading ${chartOwner}’s chart`;
+  }
+  return 'AI astrologer, online';
 }
 
 const styles = StyleSheet.create({

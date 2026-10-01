@@ -204,7 +204,7 @@ export const sampleCards = {
   },
   saturnArticle: {
     type: 'article',
-    title: 'Sade Sati, explained simply',
+    title: 'Sade Sati, explained',
     subtitle: '6 minute read',
     why: 'Why Saturn’s seven and a half years feel heavy, and why most people come out stronger.',
   },

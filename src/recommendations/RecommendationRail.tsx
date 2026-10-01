@@ -1,8 +1,9 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { HScroll } from '../components/HScroll';
 import { SCREEN_GUTTER } from '../components/layout';
 import type { Recommendation } from '../domain/recommendation';
-import { CARD_GAP, CARD_WIDTH } from './RecommendationCard';
+import { getExperience } from './catalog';
 import { resolveRecommendationCard } from './registry';
 
 type Props = {
@@ -10,28 +11,30 @@ type Props = {
   onPress: (recommendation: Recommendation) => void;
 };
 
-/** A horizontal rail that snaps one card at a time. Each card comes from the registry by type. */
+/** Horizontal rail. The registry picks the renderer so unknown types stay on it. */
 export function RecommendationRail({ recommendations, onPress }: Props) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.rail}
-      contentContainerStyle={styles.content}
-      decelerationRate="fast"
-      snapToInterval={CARD_WIDTH + CARD_GAP}
-      snapToAlignment="start"
-    >
+    <HScroll style={styles.rail} contentContainerStyle={styles.content}>
       {recommendations.map((recommendation) => {
         const Card = resolveRecommendationCard(recommendation.type);
-        return <Card key={recommendation.id} recommendation={recommendation} onPress={onPress} />;
+        const look = getExperience(recommendation.type);
+        return (
+          <HScroll.Item
+            key={recommendation.id}
+            onPress={() => onPress(recommendation)}
+            accessibilityLabel={`${look.label}: ${recommendation.title}`}
+            pressedStyle={styles.pressed}
+          >
+            <Card recommendation={recommendation} />
+          </HScroll.Item>
+        );
       })}
-    </ScrollView>
+    </HScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  // Negative margin lets the rail reach the screen edges; padding lines the first card up with the text.
+  // Negative margin reaches the screen edges; padding lines the first card up with the text.
   rail: {
     marginTop: 14,
     marginHorizontal: -SCREEN_GUTTER,
@@ -41,5 +44,9 @@ const styles = StyleSheet.create({
     paddingRight: SCREEN_GUTTER - 12,
     paddingTop: 2,
     paddingBottom: 6,
+  },
+  pressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
   },
 });

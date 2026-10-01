@@ -99,6 +99,7 @@ function ActionButton({ label, selected = false, tone = 'accent', onPress, child
 const styles = StyleSheet.create({
   bar: {
     marginTop: 8,
+    // Optical: sit the 32px icon buttons under the text, not inset with the reply's highlight padding.
     marginLeft: -7,
   },
   actions: {

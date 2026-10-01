@@ -7,65 +7,39 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '../components/Avatar';
 import { Button, IconButton } from '../components/Button';
 import { FramedImage } from '../components/FramedImage';
+import { PAGE_MAX_WIDTH, PROFILE_CTA_CLEARANCE } from '../components/layout';
 import { Detail } from '../components/profile/Detail';
 import { ReviewItem } from '../components/profile/ReviewItem';
 import { Section } from '../components/profile/Section';
 import { Stat } from '../components/profile/Stat';
-import { PAGE_MAX_WIDTH } from '../components/layout';
-import { getPersona } from '../domain/personas';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { getPersona, type Persona } from '../domain/personas';
 import type { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
-import { fonts, displayTracking } from '../theme/typography';
+import { displayTracking, fonts } from '../theme/typography';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
+const CTA_BAR_MIN_PADDING = 14;
+
 export function PersonaProfileScreen({ route, navigation }: Props) {
   const persona = getPersona(route.params.personaId);
-  const { stats } = persona;
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.topInner}>
-          <IconButton
-            onPress={navigation.goBack}
-            accessibilityLabel="Back"
-            size={32}
-          >
+      <ScreenHeader bordered>
+        <View style={styles.headerInner}>
+          <IconButton onPress={navigation.goBack} accessibilityLabel="Back" size={32}>
             <ChevronLeft size={18} color={colors.text} strokeWidth={1.75} />
           </IconButton>
           <Text style={styles.topTitle}>Profile</Text>
         </View>
-      </View>
+      </ScreenHeader>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 110 }]}>
-        <Animated.View entering={FadeIn.duration(400)}>
-          <FramedImage source={persona.avatar} aspectRatio={1.25} radius={18} />
-
-          <View style={styles.identity}>
-            <Text style={styles.name} accessibilityRole="header">
-              {persona.name}
-            </Text>
-            <Text style={styles.role}>{persona.title}</Text>
-            <View style={styles.presence}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.presenceText}>Online now. Inspired by {persona.inspiredBy}.</Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        <View style={styles.stats}>
-          <Stat
-            value={stats.rating.toFixed(1)}
-            label={`${stats.reviews} reviews`}
-            icon={<Star size={13} color={colors.text} fill={colors.text} />}
-          />
-          <View style={styles.statDivider} />
-          <Stat value={stats.consultations} label="Consultations" />
-          <View style={styles.statDivider} />
-          <Stat value={stats.experience} label="Experience" />
-        </View>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + PROFILE_CTA_CLEARANCE }]}>
+        <ProfileHero persona={persona} />
+        <ProfileStats stats={persona.stats} />
 
         <Section title="About">
           <Text style={styles.paragraph}>{persona.bio}</Text>
@@ -106,15 +80,62 @@ export function PersonaProfileScreen({ route, navigation }: Props) {
         </Text>
       </ScrollView>
 
-      <View style={[styles.ctaBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        <Button
-          label={`Chat with ${persona.name}`}
-          caption={persona.fee}
-          size="large"
-          onPress={() => navigation.navigate('Chat', { personaId: persona.id, mode: 'live' })}
-          style={styles.cta}
-        />
+      <ProfileCtaBar
+        persona={persona}
+        bottomInset={insets.bottom}
+        onChat={() => navigation.navigate('Chat', { personaId: persona.id, mode: 'live' })}
+      />
+    </View>
+  );
+}
+
+function ProfileHero({ persona }: { persona: Persona }) {
+  return (
+    <Animated.View entering={FadeIn.duration(400)}>
+      <FramedImage source={persona.avatar} aspectRatio={1.25} radius={18} />
+
+      <View style={styles.identity}>
+        <Text style={styles.name} accessibilityRole="header">
+          {persona.name}
+        </Text>
+        <Text style={styles.role}>{persona.title}</Text>
+        <View style={styles.presence}>
+          <View style={styles.onlineDot} />
+          <Text style={styles.presenceText}>Online now. Inspired by {persona.inspiredBy}.</Text>
+        </View>
       </View>
+    </Animated.View>
+  );
+}
+
+function ProfileStats({ stats }: { stats: Persona['stats'] }) {
+  return (
+    <View style={styles.stats}>
+      <Stat
+        value={stats.rating.toFixed(1)}
+        label={`${stats.reviews} reviews`}
+        icon={<Star size={13} color={colors.text} fill={colors.text} />}
+      />
+      <View style={styles.statDivider} />
+      <Stat value={stats.consultations} label="Consultations" />
+      <View style={styles.statDivider} />
+      <Stat value={stats.experience} label="Experience" />
+    </View>
+  );
+}
+
+function ProfileCtaBar({
+  persona,
+  bottomInset,
+  onChat,
+}: {
+  persona: Persona;
+  bottomInset: number;
+  onChat: () => void;
+}) {
+  return (
+    <View style={[styles.ctaBar, { paddingBottom: Math.max(bottomInset, CTA_BAR_MIN_PADDING) }]}>
+      <Button label={`Chat with ${persona.name}`} caption={persona.fee} size="large" onPress={onChat} style={styles.cta} />
     </View>
   );
 }
@@ -124,19 +145,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-  },
-  topInner: {
+  headerInner: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    width: '100%',
-    maxWidth: PAGE_MAX_WIDTH,
-    alignSelf: 'center',
   },
   topTitle: {
     fontFamily: fonts.medium,

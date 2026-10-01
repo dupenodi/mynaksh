@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 
-/** A section title with a one-line explanation underneath. */
 export function SectionHeader({ title, caption }: { title: string; caption: string }) {
   return (
     <View style={styles.header}>
@@ -13,7 +12,7 @@ export function SectionHeader({ title, caption }: { title: string; caption: stri
   );
 }
 
-/** A hairline with a word in the middle, between the simulated and live sections. */
+/** Separates the simulated list from live chats. */
 export function LabelledDivider({ label }: { label: string }) {
   return (
     <View style={styles.divider} accessibilityRole="none">

@@ -2,16 +2,15 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors } from '../../theme/colors';
+import { PRESSED_OPACITY } from '../layout';
 
 type Props = {
   icon: LucideIcon;
   label: string;
   onPress: () => void;
-  /** A small dot for unread activity. */
   badge?: boolean;
 };
 
-/** A borderless icon button for top bars. */
 export function BadgeIconButton({ icon: Icon, label, onPress, badge }: Props) {
   return (
     <Pressable
@@ -47,6 +46,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
   },
   pressed: {
-    opacity: 0.6,
+    opacity: PRESSED_OPACITY,
   },
 });

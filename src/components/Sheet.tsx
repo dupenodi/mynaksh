@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Pressable, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,33 +12,54 @@ type SheetProps = {
   children: ReactNode;
 };
 
-/** Bottom sheet built on Modal: the backdrop fades, the panel springs up. */
-export function Sheet({ visible, onClose, children }: SheetProps) {
+function SheetPanel({ onClose, children }: Omit<SheetProps, 'visible'>) {
   const insets = useSafeAreaInsets();
 
   return (
+    // Padding on Android too: under edge-to-edge the window no longer resizes for the keyboard.
+    <KeyboardAvoidingView style={styles.root} behavior="padding">
+      <Pressable
+        style={styles.backdrop}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+      />
+      <Animated.View
+        entering={SlideInDown.springify().damping(20).stiffness(180)}
+        style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}
+      >
+        <Animated.View style={styles.handle} />
+        {children}
+      </Animated.View>
+    </KeyboardAvoidingView>
+  );
+}
+
+/** Bottom sheet: Modal on native; in-tree overlay on web so it stays inside the phone frame. */
+export function Sheet({ visible, onClose, children }: SheetProps) {
+  if (Platform.OS === 'web') {
+    if (!visible) {
+      return null;
+    }
+    return (
+      <View style={styles.webHost}>
+        <SheetPanel onClose={onClose}>{children}</SheetPanel>
+      </View>
+    );
+  }
+
+  return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      {/* Padding on Android too: under edge-to-edge the window no longer resizes for the keyboard. */}
-      <KeyboardAvoidingView style={styles.root} behavior="padding">
-        <Pressable
-          style={styles.backdrop}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-        />
-        <Animated.View
-          entering={SlideInDown.springify().damping(20).stiffness(180)}
-          style={[styles.panel, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}
-        >
-          <Animated.View style={styles.handle} />
-          {children}
-        </Animated.View>
-      </KeyboardAvoidingView>
+      <SheetPanel onClose={onClose}>{children}</SheetPanel>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  webHost: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 40,
+  },
   root: {
     flex: 1,
     justifyContent: 'flex-end',

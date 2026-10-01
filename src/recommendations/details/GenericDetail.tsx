@@ -1,7 +1,7 @@
 import { DetailButtons, DetailHeading, DetailHero, DetailScroll, DetailWhy, FactList } from './DetailParts';
 import type { DetailProps } from './types';
 
-/** Artwork, the astrologer's reason and the facts. Types with an `ask` move the chat on instead of confirming. */
+/** Types with an `ask` move the chat on instead of confirming. */
 export function GenericDetail({ recommendation, look, actions }: DetailProps) {
   const onPrimary = () =>
     look.ask ? actions.ask(look.ask) : actions.confirm(`${look.cta}: ${recommendation.title}`);

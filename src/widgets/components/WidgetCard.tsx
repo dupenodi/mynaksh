@@ -1,8 +1,19 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { cardShadow, colors } from '../../theme/colors';
 import { displayTracking, fonts } from '../../theme/typography';
+
+/** Border, radius, shadow, padding. Callers override width and margin. */
+export const surfaceCard: ViewStyle = {
+  width: '100%',
+  padding: 18,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: colors.line,
+  backgroundColor: colors.background,
+  boxShadow: cardShadow,
+};
 
 type Props = {
   /** Small label above the title, e.g. "Your chart at a glance". */
@@ -11,7 +22,7 @@ type Props = {
   children: ReactNode;
 };
 
-/** The frame every reading widget sits in, so they read as one family under a message. */
+/** Frame for reading widgets so they sit as one family under a message. */
 export function WidgetCard({ eyebrow, title, children }: Props) {
   return (
     <View style={styles.card}>
@@ -22,12 +33,11 @@ export function WidgetCard({ eyebrow, title, children }: Props) {
   );
 }
 
-/** A short list with a coloured marker, used for strengths, challenges and next steps. */
 export function MarkedList({ items, color }: { items: string[]; color: string }) {
   return (
     <View style={styles.list}>
-      {items.map((item) => (
-        <View key={item} style={styles.item}>
+      {items.map((item, index) => (
+        <View key={`${item}-${index}`} style={styles.item}>
           <View style={[styles.marker, { backgroundColor: color }]} />
           <Text style={styles.itemText}>{item}</Text>
         </View>
@@ -42,15 +52,9 @@ export function WidgetSection({ children }: { children: string }) {
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
+    ...surfaceCard,
     maxWidth: 460,
     marginTop: 12,
-    padding: 18,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.background,
-    boxShadow: cardShadow,
   },
   eyebrow: {
     fontFamily: fonts.medium,

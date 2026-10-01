@@ -1,6 +1,6 @@
 import { CloudOff } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   FadeInDown,
   useAnimatedStyle,
@@ -17,6 +17,10 @@ import { Button } from './Button';
 import { Chip } from './Chip';
 import { AVATAR_GAP, AVATAR_SIZE, CONTENT_MAX_WIDTH, SCREEN_GUTTER } from './layout';
 
+function SkeletonBone({ style }: { style?: StyleProp<ViewStyle> }) {
+  return <View style={[styles.bone, style]} />;
+}
+
 export function LoadingSkeleton() {
   const pulse = useSharedValue(0.45);
 
@@ -29,19 +33,19 @@ export function LoadingSkeleton() {
   return (
     <Animated.View style={[styles.skeleton, style]} accessibilityRole="progressbar">
       <Text style={styles.loadingText}>Loading conversation…</Text>
-      <View style={[styles.bone, styles.pill]} />
-      <View style={[styles.bone, styles.right, { width: '62%' }]} />
+      <SkeletonBone style={styles.pill} />
+      <SkeletonBone style={[styles.right, { width: '62%' }]} />
       <View style={styles.advisor}>
-        <View style={[styles.bone, styles.avatar]} />
+        <SkeletonBone style={styles.avatar} />
         <View style={styles.grow}>
-          <View style={[styles.bone, { width: '84%', height: 72 }]} />
+          <SkeletonBone style={{ width: '84%', height: 72 }} />
           <View style={styles.cards}>
-            <View style={[styles.bone, styles.card]} />
-            <View style={[styles.bone, styles.card]} />
+            <SkeletonBone style={styles.card} />
+            <SkeletonBone style={styles.card} />
           </View>
         </View>
       </View>
-      <View style={[styles.bone, styles.right, { width: '48%' }]} />
+      <SkeletonBone style={[styles.right, { width: '48%' }]} />
     </Animated.View>
   );
 }
@@ -60,11 +64,11 @@ export function LoadError({ onRetry }: { onRetry: () => void }) {
 
 type EmptyStateProps = {
   persona: Persona;
-  onPick: (text: string) => void;
+  onSuggestionPress: (text: string) => void;
   onShareKundli: () => void;
 };
 
-export function EmptyState({ persona, onPick, onShareKundli }: EmptyStateProps) {
+export function EmptyState({ persona, onSuggestionPress, onShareKundli }: EmptyStateProps) {
   return (
     <ScrollView contentContainerStyle={styles.emptyScroll} keyboardShouldPersistTaps="handled">
       <Animated.View entering={FadeInDown.duration(450)} style={styles.empty}>
@@ -75,7 +79,7 @@ export function EmptyState({ persona, onPick, onShareKundli }: EmptyStateProps) 
         <Button label="Share birth details" onPress={onShareKundli} style={styles.button} />
         <View style={styles.suggestions}>
           {persona.suggestions.map((text) => (
-            <Chip key={text} label={text} tone="suggestion" onPress={() => onPick(text)} />
+            <Chip key={text} label={text} tone="suggestion" onPress={() => onSuggestionPress(text)} />
           ))}
         </View>
       </Animated.View>
