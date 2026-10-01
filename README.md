@@ -4,6 +4,10 @@ The AI conversation experience from the MyNaksh frontend assessment, built with 
 
 **Try it in a browser:** [mynaksh-umber.vercel.app](https://mynaksh-umber.vercel.app). This is an extra: the same app compiled with react-native-web; open it on a phone for the intended size. The submission itself is the native app below.
 
+## Screen recording
+
+[Watch the screen recording](https://drive.google.com/file/d/1Otbc5QExbrgqyKzyZzsQfNfG1_GUT4-K/view?usp=sharing)
+
 ## Screenshots
 
 Pixel 6, native release build.
