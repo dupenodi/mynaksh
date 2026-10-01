@@ -6,7 +6,7 @@ The AI conversation experience from the MyNaksh frontend assessment, built with 
 
 ## Screenshots
 
-Android emulator, native build.
+Pixel 6, native release build.
 
 | Chats | Recommendations | Long-press | Feedback and reply | Failed and retry |
 | --- | --- | --- | --- | --- |

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -93,6 +93,13 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.background,
     overflow: 'hidden',
+    ...(Platform.OS === 'web'
+      ? ({
+          transitionProperty: 'border-color',
+          transitionDuration: '160ms',
+          transitionTimingFunction: 'ease',
+        } as ViewStyle)
+      : null),
   },
   boxOn: {
     borderColor: colors.brandLine,
