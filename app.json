@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "MyNaksh",
+    "slug": "mynaksh",
+    "scheme": "mynaksh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mynaksh.conversation"
+    },
+    "android": {
+      "package": "com.mynaksh.conversation",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E1222",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "backgroundColor": "#0E1222"
+  }
+}
